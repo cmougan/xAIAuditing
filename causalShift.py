@@ -11,6 +11,7 @@ from sklearn.model_selection import GridSearchCV
 import seaborn as sns
 
 import matplotlib.pyplot as plt
+
 np.random.seed(101)
 # %%
 def random_logit(x):
@@ -163,16 +164,15 @@ def load_synth(data, target, data_test, target_test, smaller=False, scaler=True)
     return data, data_test
 
 
-
 # %%
-data_src, data_tar, sensible_feature, non_separating_feature= gen_synth_shift_data()
+data_src, data_tar, sensible_feature, non_separating_feature = gen_synth_shift_data()
 
 # %%
 df = pd.DataFrame(data_src[0][1])
 df.columns = ["Var%d" % (i + 1) for i in range(df.shape[1])]
-df['target'] = data_src[0][2]
+df["target"] = data_src[0][2]
 # %%
-df['Var1'].unique()
+df["Var1"].unique()
 # %%
 
 # %%
