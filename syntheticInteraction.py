@@ -33,10 +33,8 @@ df = pd.DataFrame(data=[x1, x2]).T
 df.columns = ["Var%d" % (i + 1) for i in range(df.shape[1])]
 df["cat"] = xP
 # %%
-df["target"] = df["Var1"] * df["cat"]  + np.random.normal(0, 0.1, samples)
-df["target"] = np.where(
-    df["target"] > np.mean(df["Var1"] * df["cat"] ), 1, 0
-)
+df["target"] = df["Var1"] * df["cat"] + np.random.normal(0, 0.1, samples)
+df["target"] = np.where(df["target"] > np.mean(df["Var1"] * df["cat"]), 1, 0)
 # %%
 X_tr, X_te, y_tr, y_te = train_test_split(df.drop(columns="target"), df[["target"]])
 # %%
@@ -72,7 +70,9 @@ res
 X_te_aux = X_te.copy()
 X_te_aux["Var1"] = X_te["Var1"] + 1
 y_te_aux = np.where(
-    y_te["target"] > np.mean(X_te_aux["Var1"] * X_te_aux["cat"] + X_te_aux["Var2"]), 1, 0
+    y_te["target"] > np.mean(X_te_aux["Var1"] * X_te_aux["cat"] + X_te_aux["Var2"]),
+    1,
+    0,
 )
 res = defaultdict()
 for cat, num in X_te["cat"].value_counts().items():
@@ -95,9 +95,7 @@ res
 # Fairnes should not change
 X_te_aux = X_te.copy()
 X_te_aux["Var2"] = X_te["Var2"] + 1
-y_te_aux = np.where(
-    y_te["target"] > np.mean(X_te_aux["Var1"] * X_te_aux["cat"] ), 1, 0
-)
+y_te_aux = np.where(y_te["target"] > np.mean(X_te_aux["Var1"] * X_te_aux["cat"]), 1, 0)
 res = defaultdict()
 for cat, num in X_te["cat"].value_counts().items():
     COL = "cat"
@@ -118,5 +116,5 @@ res
 
 # %%
 plt.plot()
-plt.xlabel(r'$ \it{\bf{\mu_{0}}}$ H  (mT)',fontsize = 12, fontweight='bold')
+plt.xlabel(r"$ \it{\bf{\mu_{0}}}$ H  (mT)", fontsize=12, fontweight="bold")
 # %%
