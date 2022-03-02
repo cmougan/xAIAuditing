@@ -20,6 +20,8 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics.pairwise import rbf_kernel
 import multiprocessing
 from joblib import Parallel, delayed
+from sklearn.pipeline import Pipeline
+from category_encoders import MEstimateEncoder
 
 np.random.seed(101)
 
@@ -259,7 +261,12 @@ def standard_classifier(
     if verbose:
         print("\n\nNo fairness contraint")
 
-    clf_std = LogisticRegression(solver="liblinear", C=1.0, fit_intercept=True)
+    clf_std = Pipeline(
+        [
+            ("enc", MEstimateEncoder(cols=[0],m=100)),
+            ("clf", LogisticRegression(solver="liblinear", C=1.0, fit_intercept=True)),
+        ]
+    )
     clf_std.fit(dataset_train.data, dataset_train.target)
 
     # Accuracy measures

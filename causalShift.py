@@ -169,12 +169,23 @@ data_src, data_tar, sensible_feature, non_separating_feature = gen_synth_shift_d
 
 # %%
 df = pd.DataFrame(data_src[0][1])
-df.columns = ["Var%d" % (i + 1) for i in range(df.shape[1])]
+# df.columns = ["Var%d" % (i + 1) for i in range(df.shape[1])]
 df["target"] = data_src[0][2]
 # %%
 df["Var1"].unique()
 # %%
-
+df
 # %%
 sns.kdeplot(df.Var3)
+# %%
+from category_encoders import MEstimateEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+# %%
+pipe = Pipeline([("scaler", MEstimateEncoder(cols=[0])), ("svc", LogisticRegression())])
+pipe.fit(df, df.target)
+# %%
+me = MEstimateEncoder(cols=[0])
+me.fit_transform(df, df.target)
 # %%
