@@ -1140,12 +1140,68 @@ all_shift_res = experiment_shift(
     PARALLEL,
     verbose=False,
 )  # Comment this line and uncomment next line to read from saved Pickle file
-# all_shift_res = read_experiment_shift(gamma_shift_src, gamma_shift_tar, gamma_A, N, R, CV_FOLDS, methods, metrics,\
-#                                  OUTDIR, PARALLEL, verbose=False)
+# all_shift_res = read_experiment_shift(gamma_shift_src, gamma_shift_tar, gamma_A, N, R, CV_FOLDS, methods, metrics,OUTDIR, PARALLEL, verbose=False)
+# %%
+all_shift_res
+# %%
+methods_plot = [0, 1, 4]
+scatter_metric_shift(
+    all_shift_res,
+    methods,
+    methods_plot,
+    "acc_test",
+    gamma_shift_tar,
+    (0.5, 0.9),
+    "Accuracy",
+    "1_acc_3",
+    OUTDIR,
+)
+# %%
+methods_plot = [0, 1, 4]
+scatter_metric_shift(
+    all_shift_res,
+    methods,
+    methods_plot,
+    "maxDEOd_test",
+    gamma_shift_tar,
+    (0.0, 0.75),
+    "Fairness Viol.",
+    "1_mDEO_fair_3",
+    OUTDIR,
+)
+# %%
+gamma_id = -1
+# gamma_id = 6 # Uncomment when using gamma_shift_tar =  np.linspace(0,15,10) above
+xylim = (0.5, 1.0, 0.0, 0.75)
+scatter_metric_fair(
+    all_shift_res,
+    methods,
+    "acc_test",
+    "maxDEOd_test",
+    gamma_shift_tar[gamma_id],
+    gamma_id,
+    xylim,
+    "Accuracy",
+    "Fairness Viol.",
+    "acc_maxDEOd_high",
+    OUTDIR,
+)
 # %%
 
-# %%
-
-# %%
-
+gamma_id = 1
+# gamma_id = 6 # Uncomment when using gamma_shift_tar =  np.linspace(0,15,10) above
+xylim = (0.5, 1.0, 0.0, 0.75)
+scatter_metric_fair(
+    all_shift_res,
+    methods,
+    "acc_test",
+    "maxDEOd_test",
+    gamma_shift_tar[gamma_id],
+    gamma_id,
+    xylim,
+    "Accuracy",
+    "Fairness Viol.",
+    "acc_maxDEOd_high",
+    OUTDIR,
+)
 # %%
