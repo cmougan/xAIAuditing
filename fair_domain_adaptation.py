@@ -255,7 +255,7 @@ def standard_classifier(
 
     clf_std = Pipeline(
         [
-            ("enc", MEstimateEncoder(cols=[0],m=100)),
+            ("enc", MEstimateEncoder(cols=[0], m=100)),
             ("clf", LogisticRegression(solver="liblinear", C=1.0, fit_intercept=True)),
         ]
     )
