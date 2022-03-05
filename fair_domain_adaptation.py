@@ -3,21 +3,13 @@ import numpy as np
 from collections import namedtuple, Counter
 import ot
 from sklearn.preprocessing import StandardScaler
-from sklearn import svm
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score
-from sklearn.model_selection import GridSearchCV
-from fairlearn.reductions import GridSearch, ExponentiatedGradient
-from fairlearn.reductions import (
-    EqualizedOdds,
-    DemographicParity,
-)  # , TruePositiveRateDifference
+from fairlearn.reductions import ExponentiatedGradient
+from fairlearn.reductions import EqualizedOdds
 from fairlearn.metrics import group_recall_score, group_specificity_score
 import matplotlib.pyplot as plt
 import pickle
-from numpy import linalg
-from sklearn.base import BaseEstimator
-from sklearn.metrics.pairwise import rbf_kernel
 import multiprocessing
 from joblib import Parallel, delayed
 from sklearn.pipeline import Pipeline
