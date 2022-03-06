@@ -1,5 +1,6 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+import pandas as pd
 import shap
 
 
@@ -30,15 +31,18 @@ class ShapEstimator(BaseEstimator, ClassifierMixin):
         self.model.fit(self.X_, self.y_)
         return self
 
-    def predict(self, X):
+    def predict(self, X, dataframe: bool = True):
 
         # Check is fit had been called
         check_is_fitted(self)
 
         # Input validation
-        X = check_array(X)
+        check_array(X)
 
         explainer = shap.Explainer(self.model)
         shap_values = explainer(X).values
+        if dataframe:
+            shap_values = pd.DataFrame(shap_values, columns=X.columns)
+            shap_values.add_suffix("_shap")
 
         return shap_values
