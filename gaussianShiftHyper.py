@@ -30,6 +30,13 @@ def experiment(
     cov = [[sigma, out], [out, sigma]]
     x11, x22 = np.random.multivariate_normal(mean, cov, samples).T
 
+    fig, axs = plt.subplots(ncols=1)
+    plt.title(out)
+    plt.scatter(x1, x2, alpha=0.1, label="NonInteraction")
+    plt.scatter(x11, x22, alpha=0.1, label="Interaction")
+    plt.legend()
+    plt.show()
+
     df = pd.DataFrame(data=[x1, x2]).T
     df.columns = ["Var%d" % (i + 1) for i in range(df.shape[1])]
     # df["target"] = np.where(df["Var1"] * df["Var2"] > 0, 1, 0)
@@ -66,7 +73,7 @@ pvalShap = []
 ksShap = []
 pval = []
 ks = []
-xx = np.logspace(0,2,20)
+xx = np.linspace(0,10,50)
 for i in tqdm(xx):
 
     s1, s2, x1, x2 = experiment(out=i)
@@ -78,22 +85,25 @@ for i in tqdm(xx):
 # %%
 
 plt.figure()
-plt.title("PreHoc Distribution evaluation")
-plt.plot(xx,pval, label="Pval")
-plt.plot(xx,pvalShap, label="PvalShap")
+plt.title("Pvalue of the Kolmogorov-Smirnov test between detecting input data and model explanations")
+plt.plot(xx, pval, label="Pvalue on input data")
+plt.plot(xx, pvalShap, label="Pvalue on SHAP explanations")
+plt.xlabel('Interaction parameter')
+plt.ylabel('P value of the Kolmogorov-Smirnov test')
 plt.legend()
+plt.savefig('images/gaussianpvalue.png')
 plt.show()
 
 # %%
 plt.figure()
-plt.title("PreHoc Distribution evaluation")
-plt.plot(xx,ks, label="KS")
-plt.plot(xx,ksShap, label="Shap KS")
+plt.title("Kolmogorov-Smirnov statistic between detecting input data and model explanations")
+plt.plot(xx, ks, label="Input KS statistic")
+plt.plot(xx, ksShap, label="SHAP Kolmogorov-Smirnov statistic")
+plt.xlabel('Interaction parameter')
+plt.ylabel('Kolmogorov-Smirov statistic')
 plt.legend()
+plt.savefig('images/gaussianKS.png')
 plt.show()
 
 # %%
-np.log(xx+1)
-# %%
 
-# %%
