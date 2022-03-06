@@ -139,7 +139,7 @@ def benchmark_experiment(datasets: list, model, classification: str = "classific
                     shap_pred_tr = cross_val_predict(se, X_tr, y_tr, cv=3)
                     shap_pred_tr = pd.DataFrame(shap_pred_tr, columns=X_tr.columns)
                     shap_pred_tr = shap_pred_tr.add_suffix("_shap")
-                    se.fit(X_tr,y_tr)
+                    se.fit(X_tr, y_tr)
 
                     ## Test predictions
                     pred_test = cross_val_predict(
