@@ -31,7 +31,7 @@ class ShapEstimator(BaseEstimator, ClassifierMixin):
         self.model.fit(self.X_, self.y_)
         return self
 
-    def predict(self, X, dataframe: bool = True):
+    def predict(self, X, dataframe: bool = False):
 
         # Check is fit had been called
         check_is_fitted(self)
@@ -43,6 +43,6 @@ class ShapEstimator(BaseEstimator, ClassifierMixin):
         shap_values = explainer(X).values
         if dataframe:
             shap_values = pd.DataFrame(shap_values, columns=X.columns)
-            shap_values.add_suffix("_shap")
+            shap_values = shap_values.add_suffix("_shap")
 
         return shap_values

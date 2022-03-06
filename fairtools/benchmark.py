@@ -9,6 +9,8 @@ from collections import defaultdict
 import warnings
 import re
 import traceback
+from fairtools.xaiUtils import ShapEstimator
+import xgboost
 
 warnings.filterwarnings("ignore")
 
@@ -135,8 +137,11 @@ def benchmark_experiment(datasets: list, model, classification: str = "classific
                     # Explainer predictor
                     se = ShapEstimator(model=xgboost.XGBRegressor())
                     shap_pred_tr = cross_val_predict(se, X_tr, y_tr, cv=3)
-                    ## Test predictions
+                    shap_pred_tr = pd.DataFrame(shap_pred_tr, columns=X_tr.columns)
+                    shap_pred_tr = shap_pred_tr.add_suffix("_shap")
+                    se.fit(X_tr,y_tr)
 
+                    ## Test predictions
                     pred_test = cross_val_predict(
                         estimator=model,
                         X=shap_pred_tr,
@@ -145,20 +150,36 @@ def benchmark_experiment(datasets: list, model, classification: str = "classific
                     )
 
                     ## Train
-                    se.fit(X_tr, y_tr)
-                    model.fit(shap_pred_tr, y_tr)
-                    pred_train = model.predict(shap_pred_tr)
+                    full_train = pd.concat(
+                        [
+                            X_tr.reset_index(drop=True),
+                            shap_pred_tr.reset_index(drop=True),
+                        ],
+                        axis=1,
+                    )
+                    error = y_tr - pred_test
+                    model.fit(full_train, error)
+                    pred_train = model.predict(full_train)
 
                     ## Generate OOD Shap data
                     X_ood = X_sub.append(X_up)
                     y_ood = np.concatenate((y_sub, y_up))
                     shap_pred_ood = se.predict(X_ood)
+                    shap_pred_ood = pd.DataFrame(shap_pred_ood, columns=X_tr.columns)
+                    shap_pred_ood = shap_pred_ood.add_suffix("_shap")
 
                     ## OOD
-                    pred_ood = model.predict(shap_pred_ood)
-
+                    full_ood = pd.concat(
+                        [
+                            X_ood.reset_index(drop=True),
+                            shap_pred_ood.reset_index(drop=True),
+                        ],
+                        axis=1,
+                    )
+                    pred_ood = model.predict(full_ood)
                     train_error = mean_squared_error(pred_train, y_tr)
                     test_error = mean_squared_error(pred_test, y_tr)
+
                     ood_error = mean_squared_error(pred_ood, y_ood)
 
                     generalizationError = test_error - train_error
