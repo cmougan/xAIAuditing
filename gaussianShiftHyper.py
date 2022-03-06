@@ -73,7 +73,7 @@ pvalShap = []
 ksShap = []
 pval = []
 ks = []
-xx = np.linspace(0,10,50)
+xx = np.linspace(0, 10, 50)
 for i in tqdm(xx):
 
     s1, s2, x1, x2 = experiment(out=i)
@@ -85,25 +85,28 @@ for i in tqdm(xx):
 # %%
 
 plt.figure()
-plt.title("Pvalue of the Kolmogorov-Smirnov test between detecting input data and model explanations")
+plt.title(
+    "Pvalue of the Kolmogorov-Smirnov test between detecting input data and model explanations"
+)
 plt.plot(xx, pval, label="Pvalue on input data")
 plt.plot(xx, pvalShap, label="Pvalue on SHAP explanations")
-plt.xlabel('Interaction parameter')
-plt.ylabel('P value of the Kolmogorov-Smirnov test')
+plt.xlabel("Interaction parameter")
+plt.ylabel("P value of the Kolmogorov-Smirnov test")
 plt.legend()
-plt.savefig('images/gaussianpvalue.png')
+plt.savefig("images/gaussianpvalue.png")
 plt.show()
 
 # %%
 plt.figure()
-plt.title("Kolmogorov-Smirnov statistic between detecting input data and model explanations")
+plt.title(
+    "Kolmogorov-Smirnov statistic between detecting input data and model explanations"
+)
 plt.plot(xx, ks, label="Input KS statistic")
 plt.plot(xx, ksShap, label="SHAP Kolmogorov-Smirnov statistic")
-plt.xlabel('Interaction parameter')
-plt.ylabel('Kolmogorov-Smirov statistic')
+plt.xlabel("Interaction parameter")
+plt.ylabel("Kolmogorov-Smirov statistic")
 plt.legend()
-plt.savefig('images/gaussianKS.png')
+plt.savefig("images/gaussianKS.png")
 plt.show()
 
 # %%
-
