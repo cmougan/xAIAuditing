@@ -6,6 +6,7 @@ from sklearn.metrics import roc_auc_score
 import pandas as pd
 from xgboost import XGBRegressor, XGBClassifier
 from scipy.stats import kstest
+import shap
 
 # %%
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
@@ -19,7 +20,7 @@ mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 
 # %%
 # Plug-in your method for tabular datasets
-model = LogisticRegression()
+model = XGBClassifier()
 
 # Train on CA data
 model.fit(ca_features, ca_labels)
@@ -33,9 +34,23 @@ print(roc_auc_score(preds_mi, mi_labels))
 
 
 # %%
-
 for feat in ca_features.columns:
     pval = kstest(ca_features[feat], mi_features[feat]).pvalue
+    if pval < 0.1:
+        print(feat, " is distinct ", pval)
+    else:
+        print(feat, " is equivalent ", pval)
+# %%
+# %%
+# Explainability
+explainer = shap.Explainer(model)
+shap_values = explainer(ca_features)
+ca_shap = pd.DataFrame(shap_values.values,columns=ca_features.columns)
+shap_values = explainer(mi_features)
+mi_shap = pd.DataFrame(shap_values.values,columns=ca_features.columns)
+# %%
+for feat in ca_features.columns:
+    pval = kstest(ca_shap[feat], mi_shap[feat]).pvalue
     if pval < 0.1:
         print(feat, " is distinct ", pval)
     else:
