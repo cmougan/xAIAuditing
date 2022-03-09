@@ -9,6 +9,7 @@ from scipy.stats import kstest
 import shap
 import numpy as np
 from sklearn.model_selection import train_test_split
+
 import sys
 
 sys.path.append("../")
@@ -82,6 +83,7 @@ for feat in ca_features.columns:
 se = ShapEstimator(model=XGBRegressor())
 shap_pred_ca = cross_val_predict(se, ca_features, ca_labels, cv=3)
 shap_pred_ca = pd.DataFrame(shap_pred_ca, columns=ca_features.columns)
+shap_pred_ca = shap_pred_ca.add_suffix("_shap")
 
 se.fit(ca_features, ca_labels)
 # %%
@@ -95,6 +97,7 @@ clf.fit(shap_pred_ca, error_ca)
 # %%
 shap_pred_mi = se.predict(mi_features)
 shap_pred_mi = pd.DataFrame(shap_pred_mi, columns=ca_features.columns)
+shap_pred_mi = shap_pred_mi.add_suffix("_shap")
 error_mi = mi_labels == preds_mi
 preds_mi_shap = clf.predict_proba(shap_pred_mi)[:, 1]
 # %%
@@ -103,8 +106,6 @@ print(roc_auc_score(error_ca, preds_ca_shap))
 print(roc_auc_score(error_mi, preds_mi_shap))
 # %%
 ## Only data
-clf = LogisticRegression()
-
 preds_ca_shap = cross_val_predict(
     clf, ca_features, error_ca, cv=3, method="predict_proba"
 )[:, 1]
@@ -117,8 +118,6 @@ print(roc_auc_score(error_mi, preds_mi_shap))
 ## SHAP + Data
 ca_full = pd.concat([shap_pred_ca, ca_features], axis=1)
 mi_full = pd.concat([shap_pred_mi, mi_features], axis=1)
-
-clf = LogisticRegression()
 
 preds_ca_shap = cross_val_predict(clf, ca_full, error_ca, cv=3, method="predict_proba")[
     :, 1
