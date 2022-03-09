@@ -33,8 +33,8 @@ mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 model = XGBClassifier()
 
 # Train on CA data
-model.fit(ca_features, ca_labels)
 preds_ca = cross_val_predict(model, ca_features, ca_labels, cv=3)
+model.fit(ca_features, ca_labels)
 
 # Test on MI data
 preds_mi = model.predict(mi_features)
