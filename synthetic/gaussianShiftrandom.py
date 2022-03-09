@@ -31,10 +31,7 @@ x33 = np.random.random(samples)
 plt.figure()
 sns.histplot(x1, color="r")
 sns.histplot(x11)
-
-
 # %%
-
 plt.figure()
 plt.scatter(x1, x2, label="Init")
 plt.scatter(x11, x22, label="Different")
