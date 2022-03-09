@@ -9,6 +9,8 @@ from scipy.stats import kstest
 import shap
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 import sys
 
@@ -87,7 +89,7 @@ shap_pred_ca = shap_pred_ca.add_suffix("_shap")
 
 se.fit(ca_features, ca_labels)
 # %%
-clf = LogisticRegression()
+clf = pipe = Pipeline([('scaler', StandardScaler()), ('svc', LogisticRegression())])
 error_ca = ca_labels == preds_ca
 preds_ca_shap = cross_val_predict(
     clf, shap_pred_ca, error_ca, cv=3, method="predict_proba"
