@@ -5,9 +5,18 @@ from scipy.stats import ks_2samp
 import seaborn as sns
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from xgboost import XGBRegressor, XGBClassifier
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import roc_auc_score, mean_squared_error
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression, Lasso
 
 from sklearn.ensemble import GradientBoostingRegressor
 import shap
+
+sys.path.append("../")
+from fairtools.xaiUtils import ShapEstimator
 
 # %%
 np.random.random(4)
@@ -46,6 +55,7 @@ df["target"] = df["Var1"] * df["Var2"]
 X_tr, X_te, y_tr, y_te = train_test_split(df.drop(columns="target"), df[["target"]])
 # %%
 model = GradientBoostingRegressor()
+preds_val = cross_val_predict(model, X_tr, y_tr, cv=3)
 model.fit(X_tr, y_tr)
 y_hat = model.predict(X_te)
 # %%
@@ -78,5 +88,55 @@ print(ks_2samp(x33, x3))
 # %%
 print("Target")
 print(ks_2samp(y_hat, y_hat1))
+
+# %%
+## Does xAI help to solve this issue?
+## Shap Estimator
+se = ShapEstimator(model=XGBRegressor())
+shap_pred_tr = cross_val_predict(se, X_tr, y_tr, cv=3)
+shap_pred_tr = pd.DataFrame(shap_pred_tr, columns=X_tr.columns)
+shap_pred_tr = shap_pred_tr.add_suffix("_shap")
+
+se.fit(X_tr, y_tr)
+
+# %%
+clf = Pipeline([("scaler", StandardScaler()), ("svc", Lasso())])
+# clf = RandomForestClassifier()
+error_tr = y_tr.target.values - preds_val
+preds_tr_shap = cross_val_predict(clf, shap_pred_tr, error_tr, cv=3)
+clf.fit(shap_pred_tr, error_tr)
+
+# %%
+shap_pred_te = se.predict(X_te)
+shap_pred_te = pd.DataFrame(shap_pred_te, columns=X_te.columns)
+shap_pred_te = shap_pred_te.add_suffix("_shap")
+error_te = y_te.target.values - y_hat
+preds_te_shap = clf.predict(shap_pred_te)
+# %%
+## Only SHAP
+print(mean_squared_error(error_tr, preds_tr_shap))
+print(mean_squared_error(error_te, preds_te_shap))
+# %%
+## Only data
+preds_tr_shap = cross_val_predict(clf, X_tr, error_tr, cv=3)
+clf.fit(X_tr, error_tr)
+preds_te_shap = clf.predict(X_te)
+print(mean_squared_error(error_tr, preds_tr_shap))
+print(mean_squared_error(error_te, preds_te_shap))
+
+# %%
+## SHAP + Data
+tr_full = pd.concat(
+    [shap_pred_tr.reset_index(drop=True), X_tr.reset_index(drop=True)], axis=1
+)
+te_full = pd.concat(
+    [shap_pred_te.reset_index(drop=True), X_te.reset_index(drop=True)], axis=1
+)
+
+preds_tr_shap = cross_val_predict(clf, tr_full, error_tr, cv=3)
+clf.fit(tr_full, error_tr)
+preds_te_shap = clf.predict(te_full)
+print(mean_squared_error(error_tr, preds_tr_shap))
+print(mean_squared_error(error_te, preds_te_shap))
 
 # %%

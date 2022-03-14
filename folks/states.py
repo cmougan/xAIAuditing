@@ -90,7 +90,7 @@ shap_pred_ca = shap_pred_ca.add_suffix("_shap")
 
 se.fit(ca_features, ca_labels)
 # %%
-#clf = Pipeline([('scaler', StandardScaler()), ('svc', LogisticRegression())])
+# clf = Pipeline([('scaler', StandardScaler()), ('svc', LogisticRegression())])
 clf = RandomForestClassifier()
 error_ca = ca_labels == preds_ca
 preds_ca_shap = cross_val_predict(
