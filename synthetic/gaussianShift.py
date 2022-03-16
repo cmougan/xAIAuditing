@@ -134,6 +134,11 @@ for estimator in estimators:
 
     error_ood = y_ood - preds_ood
     preds_ood_shap = clf.predict(shap_pred_ood)
+    # Original error
+    print('Original error, should remain invariant to diff estimators')
+    print(mean_squared_error(y_tr, preds_val))
+    print(mean_squared_error(y_te, preds_test))
+    print(mean_squared_error(y_ood, preds_ood))
 
     ## Only SHAP
     print("Only SHAP")
