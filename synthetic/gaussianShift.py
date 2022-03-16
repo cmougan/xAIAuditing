@@ -183,5 +183,5 @@ preds_val = cross_val_predict(model, X_tr, y_tr, cv=3)
 model.fit(X_tr, y_tr)
 preds_test = model.predict(X_te)
 print(mean_squared_error(preds_test,y_te))
+print(mean_squared_error(model.predict(X_ood),y_ood))
 # That would be the best result possible
-# %%
