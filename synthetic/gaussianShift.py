@@ -4,15 +4,21 @@ import matplotlib.pyplot as plt
 from scipy.stats import ks_2samp
 import seaborn as sns
 import pandas as pd
+import random
+from collections import defaultdict
+
+random.seed(0)
+# Scikit Learn
 from sklearn.model_selection import train_test_split
-from xgboost import XGBRegressor, XGBClassifier
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import roc_auc_score, mean_squared_error
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import LogisticRegression, Lasso
-
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+
+from xgboost import XGBRegressor, XGBClassifier
 import shap
 
 sys.path.append("../")
@@ -50,7 +56,7 @@ df["target"] = df["Var1"] * df["Var2"] + np.random.normal(0, 0.1, samples)
 ## Fit our ML model
 X_tr, X_te, y_tr, y_te = train_test_split(df.drop(columns="target"), df[["target"]])
 # %%
-model = RandomForestRegressor()
+model = XGBRegressor(random_state=0)
 preds_val = cross_val_predict(model, X_tr, y_tr, cv=3)
 model.fit(X_tr, y_tr)
 preds_test = model.predict(X_te)
@@ -71,7 +77,7 @@ exp_ood = pd.DataFrame(
     data=X_ood.values, columns=["Shap%d" % (i + 1) for i in range(2)]
 )
 y_ood = X_ood["Var1"] * X_ood["Var2"] + np.random.normal(0, 0.1, samples)
-
+# %%
 # Original error
 print(mean_squared_error(y_tr, preds_val))
 print(mean_squared_error(y_te, preds_test))
@@ -99,60 +105,70 @@ shap_pred_tr = shap_pred_tr.add_suffix("_shap")
 
 se.fit(X_tr, y_tr)
 # %%
-#clf = Pipeline([("scaler", StandardScaler()), ("svc", Lasso())])
-clf = RandomForestRegressor()
-error_tr = y_tr.target.values - preds_val
-preds_tr_shap = cross_val_predict(clf, shap_pred_tr, error_tr, cv=3)
-clf.fit(shap_pred_tr, error_tr)
+# Estimators to use
+estimators = defaultdict()
+estimators["Linear"] = Pipeline([("scaler", StandardScaler()), ("model", Lasso())])
+estimators["RandomForest"] = RandomForestRegressor(random_state=0)
+estimators["XGBoost"] = XGBRegressor(random_state=0)
+estimators["MLP"] = MLPRegressor(random_state=0)
+# %%
+for estimator in estimators:
+    print(estimator)
+    clf = estimators[estimator]
+    error_tr = y_tr.target.values - preds_val
+    preds_tr_shap = cross_val_predict(clf, shap_pred_tr, error_tr, cv=3)
+    clf.fit(shap_pred_tr, error_tr)
+
+    ## Test Set
+    shap_pred_te = se.predict(X_te)
+    shap_pred_te = pd.DataFrame(shap_pred_te, columns=X_te.columns)
+    shap_pred_te = shap_pred_te.add_suffix("_shap")
+
+    error_te = y_te.target.values - preds_test
+    preds_te_shap = clf.predict(shap_pred_te)
+
+    ## OOD Set
+    shap_pred_ood = se.predict(X_ood)
+    shap_pred_ood = pd.DataFrame(shap_pred_ood, columns=X_te.columns)
+    shap_pred_ood = shap_pred_ood.add_suffix("_shap")
+
+    error_ood = y_ood - preds_ood
+    preds_ood_shap = clf.predict(shap_pred_ood)
+
+    ## Only SHAP
+    print("Only SHAP")
+    print(mean_squared_error(error_tr, preds_tr_shap))
+    print(mean_squared_error(error_te, preds_te_shap))
+    print(mean_squared_error(error_ood, preds_ood_shap))
+
+    ## Only data
+    print("Only data")
+    preds_tr_shap = cross_val_predict(clf, X_tr, error_tr, cv=3)
+    clf.fit(X_tr, error_tr)
+    preds_te_shap = clf.predict(X_te)
+    preds_ood_shap = clf.predict(X_ood)
+    print(mean_squared_error(error_tr, preds_tr_shap))
+    print(mean_squared_error(error_te, preds_te_shap))
+    print(mean_squared_error(error_ood, preds_ood_shap))
+
+    print("Shap + Data")
+    ## SHAP + Data
+    tr_full = pd.concat(
+        [shap_pred_tr.reset_index(drop=True), X_tr.reset_index(drop=True)], axis=1
+    )
+    te_full = pd.concat(
+        [shap_pred_te.reset_index(drop=True), X_te.reset_index(drop=True)], axis=1
+    )
+    ood_full = pd.concat(
+        [shap_pred_ood.reset_index(drop=True), X_ood.reset_index(drop=True)], axis=1
+    )
+
+    preds_tr_shap = cross_val_predict(clf, tr_full, error_tr, cv=3)
+    clf.fit(tr_full, error_tr)
+    preds_te_shap = clf.predict(te_full)
+    preds_ood_shap = clf.predict(ood_full)
+    print(mean_squared_error(error_tr, preds_tr_shap))
+    print(mean_squared_error(error_te, preds_te_shap))
+    print(mean_squared_error(error_ood, preds_ood_shap))
 
 # %%
-## Test Set
-shap_pred_te = se.predict(X_te)
-shap_pred_te = pd.DataFrame(shap_pred_te, columns=X_te.columns)
-shap_pred_te = shap_pred_te.add_suffix("_shap")
-
-error_te = y_te.target.values - preds_test
-preds_te_shap = clf.predict(shap_pred_te)
-
-## OOD Set
-shap_pred_ood = se.predict(X_ood)
-shap_pred_ood = pd.DataFrame(shap_pred_ood, columns=X_te.columns)
-shap_pred_ood = shap_pred_ood.add_suffix("_shap")
-
-error_ood = y_ood - preds_ood
-preds_ood_shap = clf.predict(shap_pred_ood)
-
-# %%
-## Only SHAP
-print(mean_squared_error(error_tr, preds_tr_shap))
-print(mean_squared_error(error_te, preds_te_shap))
-print(mean_squared_error(error_ood, preds_ood_shap))
-# %%
-## Only data
-preds_tr_shap = cross_val_predict(clf, X_tr, error_tr, cv=3)
-clf.fit(X_tr, error_tr)
-preds_te_shap = clf.predict(X_te)
-preds_ood_shap = clf.predict(X_ood)
-print(mean_squared_error(error_tr, preds_tr_shap))
-print(mean_squared_error(error_te, preds_te_shap))
-print(mean_squared_error(error_ood, preds_ood_shap))
-
-# %%
-## SHAP + Data
-tr_full = pd.concat(
-    [shap_pred_tr.reset_index(drop=True), X_tr.reset_index(drop=True)], axis=1
-)
-te_full = pd.concat(
-    [shap_pred_te.reset_index(drop=True), X_te.reset_index(drop=True)], axis=1
-)
-ood_full = pd.concat(
-    [shap_pred_ood.reset_index(drop=True), X_ood.reset_index(drop=True)], axis=1
-)
-
-preds_tr_shap = cross_val_predict(clf, tr_full, error_tr, cv=3)
-clf.fit(tr_full, error_tr)
-preds_te_shap = clf.predict(te_full)
-preds_ood_shap = clf.predict(ood_full)
-print(mean_squared_error(error_tr, preds_tr_shap))
-print(mean_squared_error(error_te, preds_te_shap))
-print(mean_squared_error(error_ood, preds_ood_shap))
