@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import LogisticRegression, Lasso
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-
+plt.style.use('seaborn-whitegrid')
 from xgboost import XGBRegressor, XGBClassifier
 import shap
 
@@ -34,7 +34,7 @@ samples = 50_000
 x1, x2 = np.random.multivariate_normal(mean, cov, samples).T
 # Different values
 mean = [0, 0]
-out = 1
+out = 3
 cov = [[sigma, out], [out, sigma]]
 x11, x22 = np.random.multivariate_normal(mean, cov, samples).T
 # %%
@@ -44,8 +44,11 @@ sns.histplot(x1, color="r")
 sns.histplot(x11)
 # %%
 plt.figure()
-plt.scatter(x1, x2, label="Init")
-plt.scatter(x11, x22, label="Different")
+plt.scatter(x1, x2, label="X")
+plt.scatter(x11, x22, label="X*")
+plt.xlabel('x1')
+plt.ylabel('x2')
+plt.legend()
 
 # %%
 df = pd.DataFrame(data=[x1, x2]).T
