@@ -1,8 +1,5 @@
 # %%
 from folktables import ACSDataSource, ACSIncome
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_auc_score
 import pandas as pd
 from collections import defaultdict
 from xgboost import XGBRegressor, XGBClassifier
@@ -14,6 +11,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression, Lasso, LinearRegression
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import roc_auc_score, mean_squared_error
+from sklearn.dummy import DummyRegressor
 
 import sys
 from tqdm import tqdm
@@ -42,34 +43,46 @@ tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 model = XGBClassifier()
 
 # Train on CA data
-preds_ca = cross_val_predict(model, ca_features, ca_labels, cv=3)
+# preds_ca = cross_val_predict(model, ca_features, ca_labels, cv=3)
 model.fit(ca_features, ca_labels)
 # %%
 # Lets add the target
 mi_full = mi_features.copy()
-mi_full['target'] =  mi_labels
+mi_full["target"] = mi_labels
 # %%
 # Input KS
-train = defaultdict()
-performance = defaultdict()
-for i in tqdm(range(0,10)):
+train = []
+performance = []
+for i in tqdm(range(0, 1_000), leave=False):
     row = []
-    aux = mi_features.sample(n=50,replace=True)
-    preds = model.predict_proba(aux.drop(columns='target'))[:, 1]
-    performance[i] = roc_auc_score(aux.target.values,preds)
+    aux = mi_full.sample(n=100, replace=True)
+    preds = model.predict_proba(aux.drop(columns="target"))[:, 1]
+    performance.append(roc_auc_score(aux.target.values, preds))
     for feat in ca_features.columns:
         ks = kstest(ca_features[feat], aux[feat]).statistic
         row.append(ks)
-    train[i] = row
+    train.append(row)
 # Save results
-train_df = pd.DataFrame(train).T
+train_df = pd.DataFrame(train)
 train_df.columns = ca_features.columns
-# %%
-for col in train_df.columns:
-    print(train_df[col].nunique())
 
 # %%
-aux
+X_train, X_test, y_train, y_test = train_test_split(
+    train_df, performance, test_size=0.33, random_state=42
+)
 # %%
-mi_labels
+# Dummy
+modelOOD = DummyRegressor()
+modelOOD.fit(X_train, y_train)
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+# %%
+modelOOD = Lasso()
+modelOOD.fit(X_train, y_train)
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+# %%
+# %%
+modelOOD = LinearRegression()
+modelOOD.fit(X_train, y_train)
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
 # %%
