@@ -42,11 +42,34 @@ mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 # %%
 # Modeling
-model = XGBClassifier()
+model = LogisticRegression()
 
 # Train on CA data
-# preds_ca = cross_val_predict(model, ca_features, ca_labels, cv=3)
+preds_ca = cross_val_predict(model, ca_features, ca_labels, cv=3)
 model.fit(ca_features, ca_labels)
+# Test on MI data
+preds_mi = model.predict(mi_features)
+# Test on TX data
+preds_tx = model.predict(tx_features)
+
+##Fairness
+white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
+black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
+print("Train EO", white_tpr - black_tpr)
+
+white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
+black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
+print("Test MI EO", white_tpr - black_tpr)
+
+white_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 1)])
+black_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 2)])
+print("Test TX EO", white_tpr - black_tpr)
+
+## Model performance
+print("CA", roc_auc_score(preds_ca, ca_labels))
+print("MI", roc_auc_score(preds_mi, mi_labels))
+print("TX", roc_auc_score(preds_tx, tx_labels))
+
 # %%
 # Lets add the target to ease the sampling
 mi_full = mi_features.copy()
@@ -62,9 +85,10 @@ train = []
 performance = []
 train_shap = []
 
-explainer = shap.Explainer(model)
-shap_train = explainer(ca_features)
-shap_train = pd.DataFrame(shap_train.values, columns=ca_features.columns)
+explainer = shap.LinearExplainer(model, ca_features, feature_dependence="independent")
+
+shap_train = explainer.shap_values(ca_features)
+shap_train = pd.DataFrame(shap_train, columns=ca_features.columns)
 
 for i in tqdm(range(0, ITERS), leave=False):
     row = []
@@ -180,3 +204,5 @@ print("Random Forest")
 modelOOD = RandomForestRegressor()
 modelOOD.fit(X_train, y_train)
 print(mean_absolute_error(modelOOD.predict(X_test), y_test))
+
+# %%
