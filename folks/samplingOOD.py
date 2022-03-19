@@ -50,12 +50,17 @@ model.fit(ca_features, ca_labels)
 mi_full = mi_features.copy()
 mi_full["target"] = mi_labels
 # %%
+################################
+####### PARAMETERS #############
+SAMPLE_FRAC = 100
+ITERS = 1_000
+# %%
 # Input KS
 train = []
 performance = []
-for i in tqdm(range(0, 1_000), leave=False):
+for i in tqdm(range(0, ITERS), leave=False):
     row = []
-    aux = mi_full.sample(n=100, replace=True)
+    aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
     preds = model.predict_proba(aux.drop(columns="target"))[:, 1]
     performance.append(roc_auc_score(aux.target.values, preds))
     for feat in ca_features.columns:
