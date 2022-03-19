@@ -17,7 +17,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import LogisticRegression, Lasso
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-plt.style.use('seaborn-whitegrid')
+
+plt.style.use("seaborn-whitegrid")
 from xgboost import XGBRegressor, XGBClassifier
 import shap
 
@@ -46,8 +47,8 @@ sns.histplot(x11)
 plt.figure()
 plt.scatter(x1, x2, label="X")
 plt.scatter(x11, x22, label="X*")
-plt.xlabel('x1')
-plt.ylabel('x2')
+plt.xlabel("x1")
+plt.ylabel("x2")
 plt.legend()
 
 # %%
@@ -185,6 +186,6 @@ model = MLPRegressor(random_state=0)
 preds_val = cross_val_predict(model, X_tr, y_tr, cv=3)
 model.fit(X_tr, y_tr)
 preds_test = model.predict(X_te)
-print(mean_squared_error(preds_test,y_te))
-print(mean_squared_error(model.predict(X_ood),y_ood))
+print(mean_squared_error(preds_test, y_te))
+print(mean_squared_error(model.predict(X_ood), y_ood))
 # That would be the best result possible
