@@ -91,3 +91,23 @@ modelOOD = LinearRegression()
 modelOOD.fit(X_train, y_train)
 print(mean_squared_error(modelOOD.predict(X_test), y_test))
 # %%
+## SHAP
+# Input KS
+train_shap = []
+for i in tqdm(range(0, ITERS), leave=False):
+    row = []
+    aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
+
+    explainer = shap.Explainer(model)
+    shap_values = explainer(aux.drop(columns="target"))
+    shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
+
+    for feat in ca_features.columns:
+        ks = kstest(ca_features[feat], shap_values[feat]).statistic
+        row.append(ks)
+    train_shap.append(row)
+# Save results
+train_shap_df = pd.DataFrame(train_shap)
+train_shap_df.columns = ca_features.columns
+
+# %%
