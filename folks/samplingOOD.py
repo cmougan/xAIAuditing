@@ -46,7 +46,7 @@ model = XGBClassifier()
 # preds_ca = cross_val_predict(model, ca_features, ca_labels, cv=3)
 model.fit(ca_features, ca_labels)
 # %%
-# Lets add the target
+# Lets add the target to ease the sampling
 mi_full = mi_features.copy()
 mi_full["target"] = mi_labels
 # %%
@@ -64,10 +64,6 @@ explainer = shap.Explainer(model)
 shap_train = explainer(ca_features)
 shap_train = pd.DataFrame(shap_train.values, columns=ca_features.columns)
 
-
-# Save results
-train_shap_df = pd.DataFrame(train_shap)
-train_shap_df.columns = ca_features.columns
 for i in tqdm(range(0, ITERS), leave=False):
     row = []
     row_shap = []
