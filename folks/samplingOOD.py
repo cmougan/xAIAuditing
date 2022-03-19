@@ -3,7 +3,7 @@ from folktables import ACSDataSource, ACSIncome
 import pandas as pd
 from collections import defaultdict
 from xgboost import XGBRegressor, XGBClassifier
-from scipy.stats import kstest,wasserstein_distance
+from scipy.stats import kstest, wasserstein_distance
 import seaborn as sns
 
 import shap
@@ -15,7 +15,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression, Lasso, LinearRegression
 from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_auc_score, mean_squared_error
+from sklearn.metrics import roc_auc_score, mean_squared_error, mean_absolute_error
 from sklearn.dummy import DummyRegressor
 
 import sys
@@ -109,22 +109,22 @@ X_train, X_test, y_train, y_test = train_test_split(
 modelOOD = DummyRegressor()
 modelOOD.fit(X_train, y_train)
 print("Dummy")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 modelOOD = Lasso()
 modelOOD.fit(X_train, y_train)
 print("Lasso")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 modelOOD = LinearRegression()
 modelOOD.fit(X_train, y_train)
 print("Linear Regression")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 print("Random Forest")
 modelOOD = RandomForestRegressor()
 modelOOD.fit(X_train, y_train)
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 # %%
 #### ONLY SHAP
 print("ONLY SHAP")
@@ -135,22 +135,22 @@ X_train, X_test, y_train, y_test = train_test_split(
 modelOOD = DummyRegressor()
 modelOOD.fit(X_train, y_train)
 print("Dummy")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 modelOOD = Lasso()
 modelOOD.fit(X_train, y_train)
 print("Lasso")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 modelOOD = LinearRegression()
 modelOOD.fit(X_train, y_train)
 print("Linear Regression")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 print("Random Forest")
 modelOOD = RandomForestRegressor()
 modelOOD.fit(X_train, y_train)
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 # %%
 ### SHAP + DATA
 print("SHAP + DATA")
@@ -164,26 +164,19 @@ X_train, X_test, y_train, y_test = train_test_split(
 modelOOD = DummyRegressor()
 modelOOD.fit(X_train, y_train)
 print("Dummy")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 modelOOD = Lasso()
 modelOOD.fit(X_train, y_train)
 print("Lasso")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 modelOOD = LinearRegression()
 modelOOD.fit(X_train, y_train)
 print("Linear Regression")
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
 
 print("Random Forest")
 modelOOD = RandomForestRegressor()
 modelOOD.fit(X_train, y_train)
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
-
-
-
-
-# %%
-performance
-# %%
+print(mean_absolute_error(modelOOD.predict(X_test), y_test))
