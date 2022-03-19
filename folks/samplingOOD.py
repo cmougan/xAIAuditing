@@ -3,7 +3,9 @@ from folktables import ACSDataSource, ACSIncome
 import pandas as pd
 from collections import defaultdict
 from xgboost import XGBRegressor, XGBClassifier
-from scipy.stats import kstest
+from scipy.stats import kstest,wasserstein_distance
+import seaborn as sns
+
 import shap
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -52,8 +54,8 @@ mi_full["target"] = mi_labels
 # %%
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 500
-ITERS = 1_000
+SAMPLE_FRAC = 100
+ITERS = 500
 # %%
 # Input KS
 train = []
@@ -80,8 +82,8 @@ for i in tqdm(range(0, ITERS), leave=False):
     shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
 
     for feat in ca_features.columns:
-        ks = kstest(ca_features[feat], aux[feat]).statistic
-        sh = kstest(shap_train[feat], shap_values[feat]).statistic
+        ks = wasserstein_distance(ca_features[feat], aux[feat])
+        sh = wasserstein_distance(shap_train[feat], shap_values[feat])
         row.append(ks)
         row_shap.append(sh)
 
@@ -123,8 +125,6 @@ print("Random Forest")
 modelOOD = RandomForestRegressor()
 modelOOD.fit(X_train, y_train)
 print(mean_squared_error(modelOOD.predict(X_test), y_test))
-# %%
-
 # %%
 #### ONLY SHAP
 print("ONLY SHAP")
@@ -180,11 +180,10 @@ print("Random Forest")
 modelOOD = RandomForestRegressor()
 modelOOD.fit(X_train, y_train)
 print(mean_squared_error(modelOOD.predict(X_test), y_test))
-# %%
-train_df.describe()
-# %%
-train_shap_df.describe()
-# %%
 
 
+
+
+# %%
+performance
 # %%
