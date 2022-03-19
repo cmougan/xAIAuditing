@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression, Lasso, LinearRegression
 from sklearn.model_selection import cross_val_predict
@@ -52,62 +52,143 @@ mi_full["target"] = mi_labels
 # %%
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 100
+SAMPLE_FRAC = 500
 ITERS = 1_000
 # %%
 # Input KS
 train = []
 performance = []
+train_shap = []
+
+explainer = shap.Explainer(model)
+shap_train = explainer(ca_features)
+shap_train = pd.DataFrame(shap_train.values, columns=ca_features.columns)
+
+
+# Save results
+train_shap_df = pd.DataFrame(train_shap)
+train_shap_df.columns = ca_features.columns
 for i in tqdm(range(0, ITERS), leave=False):
     row = []
+    row_shap = []
+
+    # Sampling
     aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
+
+    # Performance calculation
     preds = model.predict_proba(aux.drop(columns="target"))[:, 1]
     performance.append(roc_auc_score(aux.target.values, preds))
-    for feat in ca_features.columns:
-        ks = kstest(ca_features[feat], aux[feat]).statistic
-        row.append(ks)
-    train.append(row)
-# Save results
-train_df = pd.DataFrame(train)
-train_df.columns = ca_features.columns
 
-# %%
-X_train, X_test, y_train, y_test = train_test_split(
-    train_df, performance, test_size=0.33, random_state=42
-)
-# %%
-# Dummy
-modelOOD = DummyRegressor()
-modelOOD.fit(X_train, y_train)
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
-# %%
-modelOOD = Lasso()
-modelOOD.fit(X_train, y_train)
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
-
-# %%
-# %%
-modelOOD = LinearRegression()
-modelOOD.fit(X_train, y_train)
-print(mean_squared_error(modelOOD.predict(X_test), y_test))
-# %%
-## SHAP
-# Input KS
-train_shap = []
-for i in tqdm(range(0, ITERS), leave=False):
-    row = []
-    aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
-
-    explainer = shap.Explainer(model)
+    # Shap values calculation
     shap_values = explainer(aux.drop(columns="target"))
     shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
 
     for feat in ca_features.columns:
-        ks = kstest(ca_features[feat], shap_values[feat]).statistic
+        ks = kstest(ca_features[feat], aux[feat]).statistic
+        sh = kstest(shap_train[feat], shap_values[feat]).statistic
         row.append(ks)
-    train_shap.append(row)
+        row_shap.append(sh)
+
+    train_shap.append(row_shap)
+    train.append(row)
+
+
 # Save results
+train_df = pd.DataFrame(train)
+train_df.columns = ca_features.columns
+
 train_shap_df = pd.DataFrame(train_shap)
 train_shap_df.columns = ca_features.columns
+train_shap_df = train_shap_df.add_suffix("_shap")
+
+# %%
+## ONLY DATA
+print("ONLY DATA")
+X_train, X_test, y_train, y_test = train_test_split(
+    train_df, performance, test_size=0.33, random_state=42
+)
+
+modelOOD = DummyRegressor()
+modelOOD.fit(X_train, y_train)
+print("Dummy")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+modelOOD = Lasso()
+modelOOD.fit(X_train, y_train)
+print("Lasso")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+modelOOD = LinearRegression()
+modelOOD.fit(X_train, y_train)
+print("Linear Regression")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+print("Random Forest")
+modelOOD = RandomForestRegressor()
+modelOOD.fit(X_train, y_train)
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+# %%
+
+# %%
+#### ONLY SHAP
+print("ONLY SHAP")
+X_train, X_test, y_train, y_test = train_test_split(
+    train_shap_df, performance, test_size=0.33, random_state=42
+)
+
+modelOOD = DummyRegressor()
+modelOOD.fit(X_train, y_train)
+print("Dummy")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+modelOOD = Lasso()
+modelOOD.fit(X_train, y_train)
+print("Lasso")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+modelOOD = LinearRegression()
+modelOOD.fit(X_train, y_train)
+print("Linear Regression")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+print("Random Forest")
+modelOOD = RandomForestRegressor()
+modelOOD.fit(X_train, y_train)
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+# %%
+### SHAP + DATA
+print("SHAP + DATA")
+X_train, X_test, y_train, y_test = train_test_split(
+    pd.concat([train_shap_df, train_df], axis=1),
+    performance,
+    test_size=0.33,
+    random_state=42,
+)
+
+modelOOD = DummyRegressor()
+modelOOD.fit(X_train, y_train)
+print("Dummy")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+modelOOD = Lasso()
+modelOOD.fit(X_train, y_train)
+print("Lasso")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+modelOOD = LinearRegression()
+modelOOD.fit(X_train, y_train)
+print("Linear Regression")
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+
+print("Random Forest")
+modelOOD = RandomForestRegressor()
+modelOOD.fit(X_train, y_train)
+print(mean_squared_error(modelOOD.predict(X_test), y_test))
+# %%
+train_df.describe()
+# %%
+train_shap_df.describe()
+# %%
+
 
 # %%
