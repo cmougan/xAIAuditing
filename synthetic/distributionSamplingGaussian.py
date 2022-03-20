@@ -106,7 +106,7 @@ print(ks_2samp(preds_test, preds_ood))
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 100
-ITERS = 1_000
+ITERS = 5_000
 # Init
 train = defaultdict()
 performance = defaultdict()
@@ -118,6 +118,7 @@ shap_train = pd.DataFrame(shap_train.values, columns=X_tr.columns)
 
 full = X_ood.copy()
 full["target"] = y_ood
+train_error = mean_squared_error(y_tr, preds_val)
 # %%
 # Loop to creat training data
 for i in tqdm(range(0, ITERS), leave=False):
@@ -129,6 +130,7 @@ for i in tqdm(range(0, ITERS), leave=False):
 
     # Performance calculation
     preds = model.predict(aux.drop(columns="target"))
+    preds = np.abs(train_error - preds)  # How much the preds differ from train
     performance[i] = mean_squared_error(aux.target.values, preds)
 
     # Shap values calculation
