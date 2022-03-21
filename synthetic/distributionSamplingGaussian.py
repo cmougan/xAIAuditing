@@ -7,6 +7,7 @@ import pandas as pd
 import random
 from collections import defaultdict
 
+np.random.seed(0)
 random.seed(0)
 # Scikit Learn
 from sklearn.model_selection import train_test_split
@@ -18,6 +19,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import LogisticRegression, Lasso, LinearRegression
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.dummy import DummyRegressor
+from sklearn.svm import SVR
 
 plt.style.use("seaborn-whitegrid")
 from xgboost import XGBRFClassifier, XGBRegressor, XGBClassifier
@@ -26,6 +28,8 @@ from tqdm import tqdm
 
 sys.path.append("../")
 from fairtools.xaiUtils import ShapEstimator
+from fairtools.utils import psi
+import random
 
 # %%
 ## Create variables
@@ -52,7 +56,6 @@ plt.scatter(x11, x22, label="X*")
 plt.xlabel("x1")
 plt.ylabel("x2")
 plt.legend()
-
 # %%
 df = pd.DataFrame(data=[x1, x2]).T
 df.columns = ["Var%d" % (i + 1) for i in range(df.shape[1])]
@@ -106,15 +109,15 @@ print(ks_2samp(preds_test, preds_ood))
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 100
-ITERS = 5_000
+ITERS = 2_000
 # Init
 train = defaultdict()
 performance = defaultdict()
 train_shap = defaultdict()
 
 explainer = shap.Explainer(model)
-shap_train = explainer(X_tr)
-shap_train = pd.DataFrame(shap_train.values, columns=X_tr.columns)
+shap_test = explainer(X_te)
+shap_test = pd.DataFrame(shap_test.values, columns=X_tr.columns)
 
 full = X_ood.copy()
 full["target"] = y_ood
@@ -130,16 +133,16 @@ for i in tqdm(range(0, ITERS), leave=False):
 
     # Performance calculation
     preds = model.predict(aux.drop(columns="target"))
-    preds = np.abs(train_error - preds)  # How much the preds differ from train
-    performance[i] = mean_squared_error(aux.target.values, preds)
+    preds = train_error - preds  # How much the preds differ from train
+    performance[i] = mean_absolute_error(aux.target.values, preds)
 
     # Shap values calculation
     shap_values = explainer(aux.drop(columns="target"))
     shap_values = pd.DataFrame(shap_values.values, columns=X_tr.columns)
 
     for feat in X_tr.columns:
-        ks = kstest(X_tr[feat], aux[feat]).statistic
-        sh = kstest(shap_train[feat], shap_values[feat]).statistic
+        ks = psi(X_te[feat], aux[feat])
+        sh = psi(shap_test[feat], shap_values[feat])
         row.append(ks)
         row_shap.append(sh)
 
@@ -156,8 +159,6 @@ train_shap_df.columns = X_tr.columns
 train_shap_df = train_shap_df.add_suffix("_shap")
 
 # %%
-len(performance)
-# %%
 # Estimators for the loop
 estimators = defaultdict()
 estimators["Dummy"] = DummyRegressor()
@@ -167,6 +168,7 @@ estimators["Linear"] = Pipeline(
 estimators["Lasso"] = Pipeline([("scaler", StandardScaler()), ("model", Lasso())])
 estimators["RandomForest"] = RandomForestRegressor(random_state=0)
 estimators["XGBoost"] = XGBRegressor(verbose=0, random_state=0)
+estimators["SVM"] = SVR()
 estimators["MLP"] = MLPRegressor(random_state=0)
 # %%
 # Loop over different G estimators
@@ -202,5 +204,3 @@ for estimator in estimators:
         "SHAP + DATA",
         mean_absolute_error(estimators[estimator].predict(X_test), y_test),
     )
-
-# %%
