@@ -1,14 +1,15 @@
 # %%
+# General imports
 import numpy as np
 import matplotlib.pyplot as plt
+
+plt.style.use("seaborn-whitegrid")
 from scipy.stats import ks_2samp, kstest, wasserstein_distance
 import seaborn as sns
 import pandas as pd
 import random
 from collections import defaultdict
 
-np.random.seed(0)
-random.seed(0)
 # Scikit Learn
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_predict
@@ -21,16 +22,19 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.dummy import DummyRegressor
 from sklearn.svm import SVR
 
-plt.style.use("seaborn-whitegrid")
+# Specific packages
 from xgboost import XGBRFClassifier, XGBRegressor, XGBClassifier
 import shap
 from tqdm import tqdm
 
+# Home made code
 sys.path.append("../")
 from fairtools.xaiUtils import ShapEstimator
 from fairtools.utils import psi
-import random
 
+# Seeding
+np.random.seed(0)
+random.seed(0)
 # %%
 ## Create variables
 ### Normal
