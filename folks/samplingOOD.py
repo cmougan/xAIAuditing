@@ -219,7 +219,8 @@ for estimator in estimators:
     print(
         "ONLY SHAP OOD",
         mean_absolute_error(
-            estimators[estimator].predict(train_shap_df_ood), list(performance_ood.values())
+            estimators[estimator].predict(train_shap_df_ood),
+            list(performance_ood.values()),
         ),
     )
 
@@ -238,7 +239,10 @@ for estimator in estimators:
     print(
         "SHAP + DATA OOD",
         mean_absolute_error(
-            estimators[estimator].predict(pd.concat([train_shap_df_ood, train_df_ood], axis=1)), list(performance_ood.values())
+            estimators[estimator].predict(
+                pd.concat([train_shap_df_ood, train_df_ood], axis=1)
+            ),
+            list(performance_ood.values()),
         ),
     )
 
