@@ -28,6 +28,7 @@ import shap
 from tqdm import tqdm
 
 # Home made code
+import sys
 sys.path.append("../")
 from fairtools.xaiUtils import ShapEstimator
 from fairtools.utils import psi
@@ -112,7 +113,7 @@ print(ks_2samp(preds_test, preds_ood))
 ## Can we learn xAI help to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 100
+SAMPLE_FRAC = 1_000
 ITERS = 2_000
 # Init
 train = defaultdict()
