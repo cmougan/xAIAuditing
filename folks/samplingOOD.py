@@ -34,10 +34,12 @@ np.random.seed(0)
 random.seed(0)
 # %%
 # Load data
-data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
+data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
 ca_data = data_source.get_data(states=["CA"], download=True)
+data_source = ACSDataSource(survey_year="2016", horizon="1-Year", survey="person")
 mi_data = data_source.get_data(states=["MI"], download=True)
-tx_data = data_source.get_data(states=["TX"], download=True)
+data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
+tx_data = data_source.get_data(states=["PR"], download=True)
 
 ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
 mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
@@ -86,8 +88,11 @@ SAMPLE_FRAC = 100
 ITERS = 2_000
 # Init
 train = defaultdict()
+train_ood = defaultdict()
 performance = defaultdict()
+performance_ood = defaultdict()
 train_shap = defaultdict()
+train_shap_ood = defaultdict()
 
 # xAI Train
 explainer = shap.Explainer(model)
@@ -98,6 +103,10 @@ shap_test = pd.DataFrame(shap_test.values, columns=ca_features.columns)
 mi_full = mi_features.copy()
 mi_full["target"] = mi_labels
 
+# Lets add the target to ease the sampling
+tx_full = tx_features.copy()
+tx_full["target"] = tx_labels
+
 train_error = roc_auc_score(ca_labels, preds_ca)
 
 # %%
@@ -105,37 +114,67 @@ train_error = roc_auc_score(ca_labels, preds_ca)
 for i in tqdm(range(0, ITERS), leave=False):
     row = []
     row_shap = []
+    row_ood = []
+    row_shap_ood = []
 
     # Sampling
     aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
+    aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
 
     # Performance calculation
     preds = model.predict_proba(aux.drop(columns="target"))[:, 1]
     preds = train_error - preds  # How much the preds differ from train
     performance[i] = mean_absolute_error(aux.target.values, preds)
 
+    # OOD performance calculation
+    preds_ood = model.predict_proba(aux_ood.drop(columns="target"))[:, 1]
+    preds_ood = train_error - preds_ood  # How much the preds differ from train
+    performance_ood[i] = mean_absolute_error(aux_ood.target.values, preds_ood)
+
     # Shap values calculation
     shap_values = explainer(aux.drop(columns="target"))
     shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
 
+    # Shap values calculation OOD
+    shap_values_ood = explainer(aux_ood.drop(columns="target"))
+    shap_values_ood = pd.DataFrame(shap_values_ood.values, columns=ca_features.columns)
+
     for feat in ca_features.columns:
+        # Michigan
         ks = wasserstein_distance(ca_features[feat], aux[feat])
         sh = wasserstein_distance(shap_test[feat], shap_values[feat])
         row.append(ks)
         row_shap.append(sh)
 
+        # OOD
+        ks_ood = wasserstein_distance(ca_features[feat], aux_ood[feat])
+        sh_ood = wasserstein_distance(shap_test[feat], shap_values_ood[feat])
+        row_ood.append(ks_ood)
+        row_shap_ood.append(sh_ood)
+
+    # Save test
     train_shap[i] = row_shap
     train[i] = row
+    # Save OOD
+    train_shap_ood[i] = row_shap_ood
+    train_ood[i] = row_ood
 
 # %%
 # Save results
+## Train (previous test)
 train_df = pd.DataFrame(train).T
 train_df.columns = ca_features.columns
 
 train_shap_df = pd.DataFrame(train_shap).T
 train_shap_df.columns = ca_features.columns
 train_shap_df = train_shap_df.add_suffix("_shap")
+## Test (previous OOD)
+train_df_ood = pd.DataFrame(train_ood).T
+train_df_ood.columns = ca_features.columns
 
+train_shap_df_ood = pd.DataFrame(train_shap_ood).T
+train_shap_df_ood.columns = ca_features.columns
+train_shap_df_ood = train_shap_df_ood.add_suffix("_shap")
 # %%
 # Estimators for the loop
 estimators = defaultdict()
@@ -162,6 +201,12 @@ for estimator in estimators:
     print(
         "ONLY DATA", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
     )
+    print(
+        "ONLY DATA OOD",
+        mean_absolute_error(
+            estimators[estimator].predict(train_df_ood), performance_ood
+        ),
+    )
 
     #### ONLY SHAP
     X_train, X_test, y_train, y_test = train_test_split(
@@ -170,6 +215,12 @@ for estimator in estimators:
     estimators[estimator].fit(X_train, y_train)
     print(
         "ONLY SHAP", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
+    )
+    print(
+        "ONLY SHAP OOD",
+        mean_absolute_error(
+            estimators[estimator].predict(train_df_ood), performance_ood
+        ),
     )
 
     ### SHAP + DATA
@@ -183,6 +234,12 @@ for estimator in estimators:
     print(
         "SHAP + DATA",
         mean_absolute_error(estimators[estimator].predict(X_test), y_test),
+    )
+    print(
+        "SHAP + DATA OOD",
+        mean_absolute_error(
+            estimators[estimator].predict(train_df_ood), performance_ood
+        ),
     )
 
 # %%
