@@ -21,7 +21,6 @@ tqdm==4.62.3
 unittest2==1.1.0
 xgboost==1.5.0
 pmlb==1.0.1
-POT==0.4.0
 numpy==1.20.3
 seaborn==0.11.2
 fairlearn==0.4.1
