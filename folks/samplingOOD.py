@@ -39,7 +39,7 @@ ca_data = data_source.get_data(states=["CA"], download=True)
 data_source = ACSDataSource(survey_year="2016", horizon="1-Year", survey="person")
 mi_data = data_source.get_data(states=["MI"], download=True)
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
-tx_data = data_source.get_data(states=["HI"], download=True)
+tx_data = data_source.get_data(states=["KS"], download=True)
 
 ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
 mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
@@ -84,7 +84,7 @@ print("TX", roc_auc_score(tx_labels, preds_tx))
 ## Can we learn xAI help to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 100
+SAMPLE_FRAC = 1_000
 ITERS = 2_000
 # Init
 train = defaultdict()
