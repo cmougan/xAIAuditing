@@ -40,7 +40,7 @@ ca_data = data_source.get_data(states=["CA"], download=True)
 data_source = ACSDataSource(survey_year="2016", horizon="1-Year", survey="person")
 mi_data = data_source.get_data(states=["MI"], download=True)
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
-tx_data = data_source.get_data(states=["KS"], download=True)
+tx_data = data_source.get_data(states=["HI"], download=True)
 
 ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
 mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
