@@ -27,7 +27,7 @@ ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
 
 # %%
 # Load TE data
-STATES = ["HI", "PR", "NM"]  #'MI','AK','NY'
+STATES = ["HI", "PR", "MI", "AK", "NY"]
 for state in STATES:
     print(state)
     mi_data = data_test.get_data(states=[state], download=True)
