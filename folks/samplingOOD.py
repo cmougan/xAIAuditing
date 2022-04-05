@@ -39,6 +39,7 @@ data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person
 ca_data = data_source.get_data(states=["CA"], download=True)
 data_source = ACSDataSource(survey_year="2016", horizon="1-Year", survey="person")
 mi_data = data_source.get_data(states=["MI"], download=True)
+
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
 tx_data = data_source.get_data(states=["HI"], download=True)
 
@@ -87,7 +88,7 @@ print("TX", roc_auc_score(tx_labels, preds_tx))
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_0
+ITERS = 1_0
 # Init
 train = defaultdict()
 train_ood = defaultdict()
@@ -205,7 +206,6 @@ estimators["XGBoost"] = XGBRegressor(
 estimators["SVM"] = SVR()
 estimators["MLP"] = MLPRegressor(random_state=0)
 # %%
-
 ## Loop over different G estimators
 print("-----------PERFORMANCE-----------")
 loop_estimators(
@@ -216,10 +216,12 @@ loop_estimators(
     shap_data_ood=train_shap_df_ood,
     performance_ood=performance_ood,
     target=performance,
+    state="HI",
+    error_type="performance",
 )
 
 print("-----------FAIRNESS-----------")
-loop_estimators(
+a = loop_estimators(
     estimator_set=estimators,
     normal_data=train_df,
     shap_data=train_shap_df,
@@ -227,6 +229,6 @@ loop_estimators(
     shap_data_ood=train_shap_df_ood,
     performance_ood=eof_ood,
     target=eof,
+    state="HI",
+    error_type="fairness",
 )
-
-# %%

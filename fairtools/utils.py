@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix, roc_auc_score
 from category_encoders import MEstimateEncoder
 import numpy as np
 from collections import defaultdict
-
+import os
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
@@ -236,10 +236,15 @@ def loop_estimators(
     shap_data_ood,
     performance_ood,
     target,
+    state: str,
+    error_type: str,
+    output_path: str = "",
 ):
     """
     Loop through the estimators and calculate the performance for each
     """
+    res = []
+
     for estimator in estimator_set:
         print(estimator)
         ## ONLY DATA
@@ -247,6 +252,11 @@ def loop_estimators(
             normal_data, target, test_size=0.33, random_state=42
         )
         estimator_set[estimator].fit(X_train, y_train)
+        error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
+        error_ood = mean_absolute_error(
+            estimator_set[estimator].predict(normal_data_ood),
+            list(performance_ood.values()),
+        )
         print(
             "ONLY DATA",
             mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
@@ -258,12 +268,18 @@ def loop_estimators(
                 list(performance_ood.values()),
             ),
         )
+        res.append([state, error_type, estimator, "Only Data", error_te, error_ood])
 
         #### ONLY SHAP
         X_train, X_test, y_train, y_test = train_test_split(
             shap_data, target, test_size=0.33, random_state=42
         )
         estimator_set[estimator].fit(X_train, y_train)
+        error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
+        error_ood = mean_absolute_error(
+            estimator_set[estimator].predict(shap_data_ood),
+            list(performance_ood.values()),
+        )
         print(
             "ONLY SHAP",
             mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
@@ -275,6 +291,7 @@ def loop_estimators(
                 list(performance_ood.values()),
             ),
         )
+        res.append([state, error_type, estimator, "Only Shap", error_te, error_ood])
 
         ### SHAP + DATA
         X_train, X_test, y_train, y_test = train_test_split(
@@ -284,6 +301,13 @@ def loop_estimators(
             random_state=42,
         )
         estimator_set[estimator].fit(X_train, y_train)
+        error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
+        error_ood = mean_absolute_error(
+            estimator_set[estimator].predict(
+                pd.concat([shap_data_ood, normal_data_ood], axis=1)
+            ),
+            list(performance_ood.values()),
+        )
         print(
             "SHAP + DATA",
             mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
@@ -297,3 +321,8 @@ def loop_estimators(
                 list(performance_ood.values()),
             ),
         )
+        res.append([state, error_type, estimator, "Data + Shap", error_te, error_ood])
+
+    folder = os.path.join("results", state + "_" + error_type + ".csv")
+    columnas = ["state", "error_type", "estimator", "data", "error_te", "error_ood"]
+    pd.DataFrame(res, columns=columnas).to_csv(folder, index=False)
