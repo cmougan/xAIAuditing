@@ -51,7 +51,7 @@ mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 # %%
 # Modeling
-model = XGBClassifier(verbosity=0, silent=True,njobs=1)
+model = XGBClassifier(verbosity=0, silent=True, njobs=1)
 
 # Train on CA data
 preds_ca = cross_val_predict(
@@ -87,7 +87,7 @@ print("TX", roc_auc_score(tx_labels, preds_tx))
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 2_0
 # Init
 train = defaultdict()
 train_ood = defaultdict()
@@ -211,6 +211,63 @@ for estimator in estimators:
     print(estimator)
     ## ONLY DATA
     X_train, X_test, y_train, y_test = train_test_split(
+        train_df, performance, test_size=0.33, random_state=42
+    )
+    estimators[estimator].fit(X_train, y_train)
+    print(
+        "ONLY DATA", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
+    )
+    print(
+        "ONLY DATA OOD",
+        mean_absolute_error(
+            estimators[estimator].predict(train_df_ood), list(performance_ood.values())
+        ),
+    )
+
+    #### ONLY SHAP
+    X_train, X_test, y_train, y_test = train_test_split(
+        train_shap_df, performance, test_size=0.33, random_state=42
+    )
+    estimators[estimator].fit(X_train, y_train)
+    print(
+        "ONLY SHAP", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
+    )
+    print(
+        "ONLY SHAP OOD",
+        mean_absolute_error(
+            estimators[estimator].predict(train_shap_df_ood),
+            list(performance_ood.values()),
+        ),
+    )
+
+    ### SHAP + DATA
+    X_train, X_test, y_train, y_test = train_test_split(
+        pd.concat([train_shap_df, train_df], axis=1),
+        performance,
+        test_size=0.33,
+        random_state=42,
+    )
+    estimators[estimator].fit(X_train, y_train)
+    print(
+        "SHAP + DATA",
+        mean_absolute_error(estimators[estimator].predict(X_test), y_test),
+    )
+    print(
+        "SHAP + DATA OOD",
+        mean_absolute_error(
+            estimators[estimator].predict(
+                pd.concat([train_shap_df_ood, train_df_ood], axis=1)
+            ),
+            list(performance_ood.values()),
+        ),
+    )
+
+## Loop over different G estimators -- FAIRNESS
+print('-----------FAIRNESS-----------')
+for estimator in estimators:
+    print(estimator)
+    ## ONLY DATA
+    X_train, X_test, y_train, y_test = train_test_split(
         train_df, eof, test_size=0.33, random_state=42
     )
     estimators[estimator].fit(X_train, y_train)
@@ -261,5 +318,3 @@ for estimator in estimators:
             list(performance_ood.values()),
         ),
     )
-
-#
