@@ -51,7 +51,7 @@ mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 # %%
 # Modeling
-model = XGBClassifier(verbosity=0, silent=True)
+model = XGBClassifier(verbosity=0, silent=True,njobs=1)
 
 # Train on CA data
 preds_ca = cross_val_predict(
@@ -87,7 +87,7 @@ print("TX", roc_auc_score(tx_labels, preds_tx))
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_0
+ITERS = 2_000
 # Init
 train = defaultdict()
 train_ood = defaultdict()
