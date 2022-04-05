@@ -28,7 +28,6 @@ from tqdm import tqdm
 import sys
 
 sys.path.append("../")
-from fairtools.xaiUtils import ShapEstimator
 from fairtools.utils import psi
 
 # Seeding
