@@ -102,7 +102,7 @@ for state in tqdm(states, desc="States", position=0, miniters=2):
     # print("MI", roc_auc_score(mi_labels, preds_mi))
     # print("TX", roc_auc_score(tx_labels, preds_tx))
 
-    ## Can we learn xAI help to solve this issue?
+    ## Can we learn to solve this issue?
     ################################
     ####### PARAMETERS #############
     SAMPLE_FRAC = 1_000
