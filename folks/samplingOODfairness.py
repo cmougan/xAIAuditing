@@ -67,11 +67,13 @@ preds_tx = model.predict_proba(tx_features)[:, 1]
 ##Fairness
 white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
 black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
-print("Train EO", white_tpr - black_tpr)
+eof_tr = white_tpr - black_tpr
+print("Train EO", eof_tr)
 
 white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
 black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 print("Test MI EO", white_tpr - black_tpr)
+
 
 white_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 1)])
 black_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 2)])
@@ -122,7 +124,6 @@ for i in tqdm(range(0, ITERS), leave=False):
     row_ood = []
     row_shap_ood = []
 
-
     # Sampling
     aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
     aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
@@ -134,7 +135,7 @@ for i in tqdm(range(0, ITERS), leave=False):
     ## Fairness
     white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
     black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
-    eof[i] = white_tpr - black_tpr
+    eof[i] = eof_tr - (white_tpr - black_tpr)
 
     # OOD performance calculation
     preds_ood = model.predict_proba(aux_ood.drop(columns=["target", "group"]))[:, 1]
@@ -143,8 +144,7 @@ for i in tqdm(range(0, ITERS), leave=False):
     ## Fairness
     white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
     black_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 2)])
-    eof_ood[i] = white_tpr - black_tpr
-
+    eof_ood[i] = eof_tr - (white_tpr - black_tpr)
 
     # Shap values calculation
     shap_values = explainer(aux.drop(columns=["target", "group"]))
@@ -212,7 +212,7 @@ for estimator in estimators:
     print(estimator)
     ## ONLY DATA
     X_train, X_test, y_train, y_test = train_test_split(
-        train_df, performance, test_size=0.33, random_state=42
+        train_df, eof, test_size=0.33, random_state=42
     )
     estimators[estimator].fit(X_train, y_train)
     print(
@@ -227,7 +227,7 @@ for estimator in estimators:
 
     #### ONLY SHAP
     X_train, X_test, y_train, y_test = train_test_split(
-        train_shap_df, performance, test_size=0.33, random_state=42
+        train_shap_df, eof, test_size=0.33, random_state=42
     )
     estimators[estimator].fit(X_train, y_train)
     print(
@@ -244,7 +244,7 @@ for estimator in estimators:
     ### SHAP + DATA
     X_train, X_test, y_train, y_test = train_test_split(
         pd.concat([train_shap_df, train_df], axis=1),
-        performance,
+        eof,
         test_size=0.33,
         random_state=42,
     )
@@ -262,5 +262,10 @@ for estimator in estimators:
             list(performance_ood.values()),
         ),
     )
+
+# %%
+pd.DataFrame(eof.values()).mean()
+# %%
+pd.DataFrame(eof_ood.values()).mean()
 
 # %%
