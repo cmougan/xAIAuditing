@@ -1,4 +1,4 @@
-black==21.9b0
+black==22.3.0
 catboost==1.0.3
 category-encoders==2.3.0
 charset-normalizer==2.0.6

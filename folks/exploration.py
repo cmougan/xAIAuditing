@@ -14,9 +14,6 @@ import shap
 
 random.seed(0)
 # %%
-
-
-# %%
 # Load TR data
 data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
 data_test = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
