@@ -6,6 +6,10 @@ from category_encoders import MEstimateEncoder
 import numpy as np
 from collections import defaultdict
 
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
+
 
 def fit_predict(modelo, enc, data, target, test):
     pipe = Pipeline([("encoder", enc), ("model", modelo)])
@@ -222,3 +226,74 @@ def psi(expected, actual, buckettype="bins", buckets=10, axis=0):
             psi_values[i] = _psi(expected[i, :], actual[i, :], buckets)
 
     return psi_values
+
+
+def loop_estimators(
+    estimator_set: list,
+    normal_data,
+    normal_data_ood,
+    shap_data,
+    shap_data_ood,
+    performance_ood,
+    target,
+):
+    """
+    Loop through the estimators and calculate the performance for each
+    """
+    for estimator in estimator_set:
+        print(estimator)
+        ## ONLY DATA
+        X_train, X_test, y_train, y_test = train_test_split(
+            normal_data, target, test_size=0.33, random_state=42
+        )
+        estimator_set[estimator].fit(X_train, y_train)
+        print(
+            "ONLY DATA",
+            mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
+        )
+        print(
+            "ONLY DATA OOD",
+            mean_absolute_error(
+                estimator_set[estimator].predict(normal_data_ood),
+                list(performance_ood.values()),
+            ),
+        )
+
+        #### ONLY SHAP
+        X_train, X_test, y_train, y_test = train_test_split(
+            shap_data, target, test_size=0.33, random_state=42
+        )
+        estimator_set[estimator].fit(X_train, y_train)
+        print(
+            "ONLY SHAP",
+            mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
+        )
+        print(
+            "ONLY SHAP OOD",
+            mean_absolute_error(
+                estimator_set[estimator].predict(shap_data_ood),
+                list(performance_ood.values()),
+            ),
+        )
+
+        ### SHAP + DATA
+        X_train, X_test, y_train, y_test = train_test_split(
+            pd.concat([shap_data, normal_data], axis=1),
+            target,
+            test_size=0.33,
+            random_state=42,
+        )
+        estimator_set[estimator].fit(X_train, y_train)
+        print(
+            "SHAP + DATA",
+            mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
+        )
+        print(
+            "SHAP + DATA OOD",
+            mean_absolute_error(
+                estimator_set[estimator].predict(
+                    pd.concat([shap_data_ood, normal_data_ood], axis=1)
+                ),
+                list(performance_ood.values()),
+            ),
+        )

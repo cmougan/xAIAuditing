@@ -28,7 +28,7 @@ from tqdm import tqdm
 import sys
 
 sys.path.append("../")
-from fairtools.utils import psi
+from fairtools.utils import psi, loop_estimators
 
 # Seeding
 np.random.seed(0)
@@ -198,7 +198,6 @@ estimators["Dummy"] = DummyRegressor()
 estimators["Linear"] = Pipeline(
     [("scaler", StandardScaler()), ("model", LinearRegression())]
 )
-estimators["Lasso"] = Pipeline([("scaler", StandardScaler()), ("model", Lasso())])
 estimators["RandomForest"] = RandomForestRegressor(random_state=0)
 estimators["XGBoost"] = XGBRegressor(
     verbosity=0, verbose=0, silent=True, random_state=0
@@ -206,115 +205,28 @@ estimators["XGBoost"] = XGBRegressor(
 estimators["SVM"] = SVR()
 estimators["MLP"] = MLPRegressor(random_state=0)
 # %%
-# Loop over different G estimators
-for estimator in estimators:
-    print(estimator)
-    ## ONLY DATA
-    X_train, X_test, y_train, y_test = train_test_split(
-        train_df, performance, test_size=0.33, random_state=42
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "ONLY DATA", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
-    )
-    print(
-        "ONLY DATA OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(train_df_ood), list(performance_ood.values())
-        ),
-    )
 
-    #### ONLY SHAP
-    X_train, X_test, y_train, y_test = train_test_split(
-        train_shap_df, performance, test_size=0.33, random_state=42
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "ONLY SHAP", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
-    )
-    print(
-        "ONLY SHAP OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(train_shap_df_ood),
-            list(performance_ood.values()),
-        ),
-    )
+## Loop over different G estimators
+print("-----------PERFORMANCE-----------")
+loop_estimators(
+    estimator_set=estimators,
+    normal_data=train_df,
+    shap_data=train_shap_df,
+    normal_data_ood=train_df_ood,
+    shap_data_ood=train_shap_df_ood,
+    performance_ood=performance_ood,
+    target=performance,
+)
 
-    ### SHAP + DATA
-    X_train, X_test, y_train, y_test = train_test_split(
-        pd.concat([train_shap_df, train_df], axis=1),
-        performance,
-        test_size=0.33,
-        random_state=42,
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "SHAP + DATA",
-        mean_absolute_error(estimators[estimator].predict(X_test), y_test),
-    )
-    print(
-        "SHAP + DATA OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(
-                pd.concat([train_shap_df_ood, train_df_ood], axis=1)
-            ),
-            list(performance_ood.values()),
-        ),
-    )
+print("-----------FAIRNESS-----------")
+loop_estimators(
+    estimator_set=estimators,
+    normal_data=train_df,
+    shap_data=train_shap_df,
+    normal_data_ood=train_df_ood,
+    shap_data_ood=train_shap_df_ood,
+    performance_ood=eof_ood,
+    target=eof,
+)
 
-## Loop over different G estimators -- FAIRNESS
-print('-----------FAIRNESS-----------')
-for estimator in estimators:
-    print(estimator)
-    ## ONLY DATA
-    X_train, X_test, y_train, y_test = train_test_split(
-        train_df, eof, test_size=0.33, random_state=42
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "ONLY DATA", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
-    )
-    print(
-        "ONLY DATA OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(train_df_ood), list(performance_ood.values())
-        ),
-    )
-
-    #### ONLY SHAP
-    X_train, X_test, y_train, y_test = train_test_split(
-        train_shap_df, eof, test_size=0.33, random_state=42
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "ONLY SHAP", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
-    )
-    print(
-        "ONLY SHAP OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(train_shap_df_ood),
-            list(performance_ood.values()),
-        ),
-    )
-
-    ### SHAP + DATA
-    X_train, X_test, y_train, y_test = train_test_split(
-        pd.concat([train_shap_df, train_df], axis=1),
-        eof,
-        test_size=0.33,
-        random_state=42,
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "SHAP + DATA",
-        mean_absolute_error(estimators[estimator].predict(X_test), y_test),
-    )
-    print(
-        "SHAP + DATA OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(
-                pd.concat([train_shap_df_ood, train_df_ood], axis=1)
-            ),
-            list(performance_ood.values()),
-        ),
-    )
+# %%
