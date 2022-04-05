@@ -26,6 +26,7 @@ from tqdm import tqdm
 
 # Home made code
 import sys
+
 sys.path.append("../")
 from fairtools.xaiUtils import ShapEstimator
 from fairtools.utils import psi
@@ -80,13 +81,12 @@ print("Test TX EO", white_tpr - black_tpr)
 print("CA", roc_auc_score(ca_labels, preds_ca))
 print("MI", roc_auc_score(mi_labels, preds_mi))
 print("TX", roc_auc_score(tx_labels, preds_tx))
-
 # %%
 ## Can we learn xAI help to solve this issue?
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 2_0
 # Init
 train = defaultdict()
 train_ood = defaultdict()
@@ -94,6 +94,8 @@ performance = defaultdict()
 performance_ood = defaultdict()
 train_shap = defaultdict()
 train_shap_ood = defaultdict()
+eof = defaultdict()
+eof_ood = defaultdict()
 
 # xAI Train
 explainer = shap.Explainer(model)
@@ -102,10 +104,12 @@ shap_test = pd.DataFrame(shap_test.values, columns=ca_features.columns)
 
 # Lets add the target to ease the sampling
 mi_full = mi_features.copy()
+mi_full["group"] = mi_group
 mi_full["target"] = mi_labels
 
 # Lets add the target to ease the sampling
 tx_full = tx_features.copy()
+tx_full["group"] = tx_group
 tx_full["target"] = tx_labels
 
 train_error = roc_auc_score(ca_labels, preds_ca)
@@ -118,26 +122,36 @@ for i in tqdm(range(0, ITERS), leave=False):
     row_ood = []
     row_shap_ood = []
 
+
     # Sampling
     aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
     aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
 
     # Performance calculation
-    preds = model.predict_proba(aux.drop(columns="target"))[:, 1]
+    preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
     preds = train_error - preds  # How much the preds differ from train
     performance[i] = mean_absolute_error(aux.target.values, preds)
+    ## Fairness
+    white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
+    black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
+    eof[i] = white_tpr - black_tpr
 
     # OOD performance calculation
-    preds_ood = model.predict_proba(aux_ood.drop(columns="target"))[:, 1]
+    preds_ood = model.predict_proba(aux_ood.drop(columns=["target", "group"]))[:, 1]
     preds_ood = train_error - preds_ood  # How much the preds differ from train
     performance_ood[i] = mean_absolute_error(aux_ood.target.values, preds_ood)
+    ## Fairness
+    white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
+    black_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 2)])
+    eof_ood[i] = white_tpr - black_tpr
+
 
     # Shap values calculation
-    shap_values = explainer(aux.drop(columns="target"))
+    shap_values = explainer(aux.drop(columns=["target", "group"]))
     shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
 
     # Shap values calculation OOD
-    shap_values_ood = explainer(aux_ood.drop(columns="target"))
+    shap_values_ood = explainer(aux_ood.drop(columns=["target", "group"]))
     shap_values_ood = pd.DataFrame(shap_values_ood.values, columns=ca_features.columns)
 
     for feat in ca_features.columns:
@@ -176,6 +190,8 @@ train_df_ood.columns = ca_features.columns
 train_shap_df_ood = pd.DataFrame(train_shap_ood).T
 train_shap_df_ood.columns = ca_features.columns
 train_shap_df_ood = train_shap_df_ood.add_suffix("_shap")
+## Fairness
+
 # %%
 # Estimators for the loop
 estimators = defaultdict()
