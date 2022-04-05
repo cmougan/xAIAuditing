@@ -261,10 +261,3 @@ for estimator in estimators:
             list(performance_ood.values()),
         ),
     )
-
-# %%
-pd.DataFrame(eof.values()).mean()
-# %%
-pd.DataFrame(eof_ood.values()).mean()
-
-# %%

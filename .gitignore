@@ -133,3 +133,4 @@ stupid.py
 data/*
 results/*
 folks/data/*
+*.ipynb_checkpoints*

@@ -21,7 +21,8 @@ tqdm==4.62.3
 unittest2==1.1.0
 xgboost==1.5.0
 pmlb==1.0.1
-numpy==1.22.3
+numpy==1.21.4
+numba==0.53
 seaborn==0.11.2
 fairlearn==0.4.1
 category_encoders==2.3.0
