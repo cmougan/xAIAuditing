@@ -246,7 +246,6 @@ def loop_estimators(
     res = []
 
     for estimator in estimator_set:
-        print(estimator)
         ## ONLY DATA
         X_train, X_test, y_train, y_test = train_test_split(
             normal_data, target, test_size=0.33, random_state=42
@@ -257,17 +256,7 @@ def loop_estimators(
             estimator_set[estimator].predict(normal_data_ood),
             list(performance_ood.values()),
         )
-        print(
-            "ONLY DATA",
-            mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
-        )
-        print(
-            "ONLY DATA OOD",
-            mean_absolute_error(
-                estimator_set[estimator].predict(normal_data_ood),
-                list(performance_ood.values()),
-            ),
-        )
+
         res.append([state, error_type, estimator, "Only Data", error_te, error_ood])
 
         #### ONLY SHAP
@@ -280,17 +269,7 @@ def loop_estimators(
             estimator_set[estimator].predict(shap_data_ood),
             list(performance_ood.values()),
         )
-        print(
-            "ONLY SHAP",
-            mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
-        )
-        print(
-            "ONLY SHAP OOD",
-            mean_absolute_error(
-                estimator_set[estimator].predict(shap_data_ood),
-                list(performance_ood.values()),
-            ),
-        )
+
         res.append([state, error_type, estimator, "Only Shap", error_te, error_ood])
 
         ### SHAP + DATA
@@ -307,19 +286,6 @@ def loop_estimators(
                 pd.concat([shap_data_ood, normal_data_ood], axis=1)
             ),
             list(performance_ood.values()),
-        )
-        print(
-            "SHAP + DATA",
-            mean_absolute_error(estimator_set[estimator].predict(X_test), y_test),
-        )
-        print(
-            "SHAP + DATA OOD",
-            mean_absolute_error(
-                estimator_set[estimator].predict(
-                    pd.concat([shap_data_ood, normal_data_ood], axis=1)
-                ),
-                list(performance_ood.values()),
-            ),
         )
         res.append([state, error_type, estimator, "Data + Shap", error_te, error_ood])
 
