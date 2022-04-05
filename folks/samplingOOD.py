@@ -28,8 +28,7 @@ from tqdm import tqdm
 import sys
 
 sys.path.append("../")
-from fairtools.xaiUtils import ShapEstimator
-from fairtools.utils import psi
+from fairtools.utils import psi, loop_estimators
 
 # Seeding
 np.random.seed(0)
@@ -52,7 +51,7 @@ mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 # %%
 # Modeling
-model = XGBClassifier(verbosity=0, silent=True)
+model = XGBClassifier(verbosity=0, silent=True, njobs=1)
 
 # Train on CA data
 preds_ca = cross_val_predict(
@@ -67,11 +66,13 @@ preds_tx = model.predict_proba(tx_features)[:, 1]
 ##Fairness
 white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
 black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
-print("Train EO", white_tpr - black_tpr)
+eof_tr = white_tpr - black_tpr
+print("Train EO", eof_tr)
 
 white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
 black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 print("Test MI EO", white_tpr - black_tpr)
+
 
 white_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 1)])
 black_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 2)])
@@ -81,13 +82,12 @@ print("Test TX EO", white_tpr - black_tpr)
 print("CA", roc_auc_score(ca_labels, preds_ca))
 print("MI", roc_auc_score(mi_labels, preds_mi))
 print("TX", roc_auc_score(tx_labels, preds_tx))
-
 # %%
 ## Can we learn xAI help to solve this issue?
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 2_0
 # Init
 train = defaultdict()
 train_ood = defaultdict()
@@ -95,6 +95,8 @@ performance = defaultdict()
 performance_ood = defaultdict()
 train_shap = defaultdict()
 train_shap_ood = defaultdict()
+eof = defaultdict()
+eof_ood = defaultdict()
 
 # xAI Train
 explainer = shap.Explainer(model)
@@ -103,16 +105,18 @@ shap_test = pd.DataFrame(shap_test.values, columns=ca_features.columns)
 
 # Lets add the target to ease the sampling
 mi_full = mi_features.copy()
+mi_full["group"] = mi_group
 mi_full["target"] = mi_labels
 
 # Lets add the target to ease the sampling
 tx_full = tx_features.copy()
+tx_full["group"] = tx_group
 tx_full["target"] = tx_labels
 
 train_error = roc_auc_score(ca_labels, preds_ca)
 
 # %%
-# Loop to creat training data
+# Loop to create training data
 for i in tqdm(range(0, ITERS), leave=False):
     row = []
     row_shap = []
@@ -124,21 +128,29 @@ for i in tqdm(range(0, ITERS), leave=False):
     aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
 
     # Performance calculation
-    preds = model.predict_proba(aux.drop(columns="target"))[:, 1]
+    preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
     preds = train_error - preds  # How much the preds differ from train
     performance[i] = mean_absolute_error(aux.target.values, preds)
+    ## Fairness
+    white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
+    black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
+    eof[i] = eof_tr - (white_tpr - black_tpr)
 
     # OOD performance calculation
-    preds_ood = model.predict_proba(aux_ood.drop(columns="target"))[:, 1]
+    preds_ood = model.predict_proba(aux_ood.drop(columns=["target", "group"]))[:, 1]
     preds_ood = train_error - preds_ood  # How much the preds differ from train
     performance_ood[i] = mean_absolute_error(aux_ood.target.values, preds_ood)
+    ## Fairness
+    white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
+    black_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 2)])
+    eof_ood[i] = eof_tr - (white_tpr - black_tpr)
 
     # Shap values calculation
-    shap_values = explainer(aux.drop(columns="target"))
+    shap_values = explainer(aux.drop(columns=["target", "group"]))
     shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
 
     # Shap values calculation OOD
-    shap_values_ood = explainer(aux_ood.drop(columns="target"))
+    shap_values_ood = explainer(aux_ood.drop(columns=["target", "group"]))
     shap_values_ood = pd.DataFrame(shap_values_ood.values, columns=ca_features.columns)
 
     for feat in ca_features.columns:
@@ -177,6 +189,8 @@ train_df_ood.columns = ca_features.columns
 train_shap_df_ood = pd.DataFrame(train_shap_ood).T
 train_shap_df_ood.columns = ca_features.columns
 train_shap_df_ood = train_shap_df_ood.add_suffix("_shap")
+## Fairness
+
 # %%
 # Estimators for the loop
 estimators = defaultdict()
@@ -184,7 +198,6 @@ estimators["Dummy"] = DummyRegressor()
 estimators["Linear"] = Pipeline(
     [("scaler", StandardScaler()), ("model", LinearRegression())]
 )
-estimators["Lasso"] = Pipeline([("scaler", StandardScaler()), ("model", Lasso())])
 estimators["RandomForest"] = RandomForestRegressor(random_state=0)
 estimators["XGBoost"] = XGBRegressor(
     verbosity=0, verbose=0, silent=True, random_state=0
@@ -192,60 +205,28 @@ estimators["XGBoost"] = XGBRegressor(
 estimators["SVM"] = SVR()
 estimators["MLP"] = MLPRegressor(random_state=0)
 # %%
-# Loop over different G estimators
-for estimator in estimators:
-    print(estimator)
-    ## ONLY DATA
-    X_train, X_test, y_train, y_test = train_test_split(
-        train_df, performance, test_size=0.33, random_state=42
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "ONLY DATA", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
-    )
-    print(
-        "ONLY DATA OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(train_df_ood), list(performance_ood.values())
-        ),
-    )
 
-    #### ONLY SHAP
-    X_train, X_test, y_train, y_test = train_test_split(
-        train_shap_df, performance, test_size=0.33, random_state=42
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "ONLY SHAP", mean_absolute_error(estimators[estimator].predict(X_test), y_test)
-    )
-    print(
-        "ONLY SHAP OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(train_shap_df_ood),
-            list(performance_ood.values()),
-        ),
-    )
+## Loop over different G estimators
+print("-----------PERFORMANCE-----------")
+loop_estimators(
+    estimator_set=estimators,
+    normal_data=train_df,
+    shap_data=train_shap_df,
+    normal_data_ood=train_df_ood,
+    shap_data_ood=train_shap_df_ood,
+    performance_ood=performance_ood,
+    target=performance,
+)
 
-    ### SHAP + DATA
-    X_train, X_test, y_train, y_test = train_test_split(
-        pd.concat([train_shap_df, train_df], axis=1),
-        performance,
-        test_size=0.33,
-        random_state=42,
-    )
-    estimators[estimator].fit(X_train, y_train)
-    print(
-        "SHAP + DATA",
-        mean_absolute_error(estimators[estimator].predict(X_test), y_test),
-    )
-    print(
-        "SHAP + DATA OOD",
-        mean_absolute_error(
-            estimators[estimator].predict(
-                pd.concat([train_shap_df_ood, train_df_ood], axis=1)
-            ),
-            list(performance_ood.values()),
-        ),
-    )
+print("-----------FAIRNESS-----------")
+loop_estimators(
+    estimator_set=estimators,
+    normal_data=train_df,
+    shap_data=train_shap_df,
+    normal_data_ood=train_df_ood,
+    shap_data_ood=train_shap_df_ood,
+    performance_ood=eof_ood,
+    target=eof,
+)
 
 # %%
