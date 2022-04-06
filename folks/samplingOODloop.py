@@ -60,7 +60,7 @@ states = [
     "AP",
     "AK",
 ]  #'VI','GU','AS','MP','FM','MH','PW','AA','AE','AP','AK','AL','AR','AZ','CA','CO','CT','DC','DE','FL','GA','HI','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','PR','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY']
-for state in tqdm(states, desc="States", position=0, miniters=2):
+for state in tqdm(states, desc="States", position=0):
     try:
         data_source = ACSDataSource(
             survey_year="2018", horizon="1-Year", survey="person"
