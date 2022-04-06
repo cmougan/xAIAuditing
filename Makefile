@@ -33,3 +33,6 @@ sum_sport_hours:
 
 
 
+clean_results:
+	find folks/results -name "*.csv" -type f -print0 | xargs -0 /bin/rm -f
+	find results/ -name "*.csv" -type f -print0 | xargs -0 /bin/rm -f
