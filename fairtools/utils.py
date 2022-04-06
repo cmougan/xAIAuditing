@@ -254,7 +254,7 @@ def loop_estimators(
         error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
         error_ood = mean_absolute_error(
             estimator_set[estimator].predict(normal_data_ood),
-            list(performance_ood.values()),
+            np.nan_to_num(list(performance_ood.values())),
         )
 
         res.append([state, error_type, estimator, "Only Data", error_te, error_ood])
@@ -267,7 +267,7 @@ def loop_estimators(
         error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
         error_ood = mean_absolute_error(
             estimator_set[estimator].predict(shap_data_ood),
-            list(performance_ood.values()),
+            np.nan_to_num(list(performance_ood.values())),
         )
 
         res.append([state, error_type, estimator, "Only Shap", error_te, error_ood])
@@ -285,7 +285,7 @@ def loop_estimators(
             estimator_set[estimator].predict(
                 pd.concat([shap_data_ood, normal_data_ood], axis=1)
             ),
-            list(performance_ood.values()),
+            np.nan_to_num(list(performance_ood.values())),
         )
         res.append([state, error_type, estimator, "Data + Shap", error_te, error_ood])
 
