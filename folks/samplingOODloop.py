@@ -104,8 +104,8 @@ for state in tqdm(states, desc="States", position=0):
         ## Can we learn to solve this issue?
         ################################
         ####### PARAMETERS #############
-        SAMPLE_FRAC = 1_000
-        ITERS = 2_000
+        SAMPLE_FRAC = 1_0
+        ITERS = 2_0
         # Init
         train = defaultdict()
         train_ood = defaultdict()
@@ -157,7 +157,7 @@ for state in tqdm(states, desc="States", position=0):
                 :, 1
             ]
             performance_ood[i] = train_error - roc_auc_score(
-                aux_ood.target.values - preds_ood
+                aux_ood.target.values, preds_ood
             )
             ## Fairness
             white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
