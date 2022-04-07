@@ -112,7 +112,7 @@ for state in tqdm(states, desc="States", position=0):
         ## Can we learn to solve this issue?
         ################################
         ####### PARAMETERS #############
-        SAMPLE_FRAC = 1_000
+        SAMPLE_FRAC = 10_000
         ITERS = 2_000
         # Init
         train = defaultdict()
