@@ -1,11 +1,12 @@
 # %%
 import pandas as pd
+import numpy as np
 
 # %%
 df = pd.read_csv("all_results.csv")
 
 df = df[df["error_type"] == "performance"]
-df = df.drop(columns="error_ood")
+# df = df.drop(columns="error_te")
 # df = df[df['state']=='PR']
 df = df[
     (df["estimator"] == "Linear")
@@ -22,7 +23,12 @@ pd.pivot_table(
     index=["state"],
 ).T.sort_values(by=["estimator", "data"], ascending=False).style.highlight_min()
 # %%
-df
-# %%
-df = df[df["error_type"] == "performance"]
+pd.pivot_table(
+    df,
+    index=[
+        "estimator",
+        "data",
+    ],
+    aggfunc=[np.mean, np.std],
+).style.highlight_min()  # .T.sort_values(by=["estimator", "data"], ascending=False).style.highlight_min()
 # %%

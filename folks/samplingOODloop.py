@@ -103,7 +103,7 @@ for state in tqdm(states, desc="States", position=0):
         ## Can we learn to solve this issue?
         ################################
         ####### PARAMETERS #############
-        SAMPLE_FRAC = 10_000
+        SAMPLE_FRAC = 1_000
         ITERS = 2_000
         # Init
         train = defaultdict()
@@ -145,8 +145,10 @@ for state in tqdm(states, desc="States", position=0):
 
             # Performance calculation
             preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
-            preds = train_error - preds  # How much the preds differ from train
-            performance[i] = mean_absolute_error(aux.target.values, preds)
+            preds = np.mean(train_error) - np.mean(
+                preds
+            )  # How much the preds differ from train
+            performance[i] = np.mean(aux.target.values) - preds
             ## Fairness
             white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
             black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
@@ -156,8 +158,10 @@ for state in tqdm(states, desc="States", position=0):
             preds_ood = model.predict_proba(aux_ood.drop(columns=["target", "group"]))[
                 :, 1
             ]
-            preds_ood = train_error - preds_ood  # How much the preds differ from train
-            performance_ood[i] = mean_absolute_error(aux_ood.target.values, preds_ood)
+            preds_ood = np.mean(train_error) - np.mean(
+                preds_ood
+            )  # How much the preds differ from train
+            performance_ood[i] = np.mean(aux_ood.target.values) - preds_ood
             ## Fairness
             white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
             black_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 2)])
