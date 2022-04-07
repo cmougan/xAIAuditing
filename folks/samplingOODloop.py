@@ -1,4 +1,5 @@
 import warnings
+import pdb
 
 warnings.filterwarnings("ignore")
 from folktables import ACSDataSource, ACSIncome
@@ -145,7 +146,6 @@ for state in tqdm(states, desc="States", position=0):
 
             # Performance calculation
             preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
-            preds = roc_auc_score(aux.target, preds)
             performance[i] = train_error - roc_auc_score(aux.target, preds)
             ## Fairness TODO Check HARD and SOFT predictions
             white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
