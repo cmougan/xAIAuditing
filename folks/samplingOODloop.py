@@ -103,8 +103,8 @@ for state in tqdm(states, desc="States", position=0):
         ## Can we learn to solve this issue?
         ################################
         ####### PARAMETERS #############
-        SAMPLE_FRAC = 1_000
-        ITERS = 2_000
+        SAMPLE_FRAC = 1_0
+        ITERS = 2_0
         # Init
         train = defaultdict()
         train_ood = defaultdict()
@@ -148,7 +148,7 @@ for state in tqdm(states, desc="States", position=0):
             preds = np.mean(train_error) - np.mean(
                 preds
             )  # How much the preds differ from train
-            performance[i] = np.mean(aux.target.values) - preds
+            performance[i] = np.mean(aux.target.values) - np.mean(preds)
             ## Fairness
             white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
             black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
