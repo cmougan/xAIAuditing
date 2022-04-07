@@ -1,5 +1,5 @@
+# %%
 import warnings
-import pdb
 
 warnings.filterwarnings("ignore")
 from folktables import ACSDataSource, ACSIncome
@@ -254,3 +254,5 @@ for state in tqdm(states, desc="States", position=0):
         print(traceback.format_exc())
         # or
         print(sys.exc_info()[2])
+
+# %%
