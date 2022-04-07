@@ -104,8 +104,8 @@ for state in tqdm(states, desc="States", position=0):
         ## Can we learn to solve this issue?
         ################################
         ####### PARAMETERS #############
-        SAMPLE_FRAC = 1_0
-        ITERS = 2_0
+        SAMPLE_FRAC = 1_000
+        ITERS = 2_000
         # Init
         train = defaultdict()
         train_ood = defaultdict()
