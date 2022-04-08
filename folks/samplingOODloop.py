@@ -98,6 +98,7 @@ states = [
     "AK",
     "RI",
     "AL",
+    "PR",
 ]
 for state in tqdm(states, desc="States", position=0):
     try:
