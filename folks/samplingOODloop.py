@@ -79,7 +79,8 @@ states = [
     "MT",
     "WY",
     "ND",
-    "SD" "GA",
+    "SD",
+    "GA",
     "NM",
     "AZ",
     "VA",
@@ -104,7 +105,7 @@ for state in tqdm(states, desc="States", position=0):
         data_source = ACSDataSource(
             survey_year="2018", horizon="1-Year", survey="person"
         )
-        tx_data = data_source.get_data(states=["HI"], download=True)
+        tx_data = data_source.get_data(states=["HI"], download=False)
 
         ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
         mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
