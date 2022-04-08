@@ -20,7 +20,7 @@ fig = px.choropleth(
 )
 fig.show()
 
-aux = df[df["error_type"] == "performance"]
+aux = df[df["error_type"] == "fairness"]
 aux = aux[aux["estimator"] == "Linear"]
 aux = aux[aux["data"] == "Only Data"]
 fig = px.choropleth(
@@ -35,5 +35,7 @@ fig = px.choropleth(
 )
 fig.show()
 
+
+# %%
 
 # %%
