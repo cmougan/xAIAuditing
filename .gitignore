@@ -135,4 +135,4 @@ results/*
 folks/data/*
 *.ipynb_checkpoints*
 *.csv
-
+*.gz
