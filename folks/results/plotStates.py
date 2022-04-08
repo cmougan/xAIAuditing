@@ -24,3 +24,45 @@ fig.show()
 # %%
 df
 # %%
+data = pd.read_csv("all_results_13states.csv")
+# %%
+aux = data.groupby(["state"]).mean().reset_index()
+# %%
+df
+# %%
+
+fig = px.choropleth(
+    aux,
+    locations="state",
+    locationmode="USA-states",
+    color="error_te",
+    color_continuous_scale="Viridis_r",
+    scope="usa",
+)  # make sure 'period_begin' is string type and sorted in ascending order
+
+fig.show()
+# %%
+aux2 = df.groupby("state_code").mean().reset_index()
+# %%
+fig = px.choropleth(
+    aux2,
+    locations="state_code",
+    locationmode="USA-states",
+    color="Median Sales Price ($)",
+    color_continuous_scale="Viridis_r",
+    scope="usa",
+)  # make sure 'period_begin' is string type and sorted in ascending order
+
+fig.show()
+# %%
+us_states = df.state_code.unique()
+# %%
+
+i = 0
+for state in data.state.unique():
+    if state not in us_states:
+        i = i + 1
+        print(state)
+# %%
+"SD" in us_states
+# %%
