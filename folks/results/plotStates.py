@@ -1,125 +1,39 @@
 # %%
 import pandas as pd
 import plotly.express as px
+import matplotlib.pyplot as plt
 
-df = pd.read_csv(r"state_market_tracker.tsv000.gz", sep="\t")
-df = df[["period_begin", "state", "state_code", "property_type", "median_sale_price"]]
-df = df[(df["property_type"] == "Single Family Residential")]
-df.rename({"median_sale_price": "Median Sales Price ($)"}, axis=1, inplace=True)
-df["period_begin"] = pd.to_datetime(df["period_begin"]).dt.date.astype(str)
-df = df.sort_values(
-    "period_begin"
-)  # Make sure you sort the time horizon column in ascending order because this column is in random order in the raw dataset
-
+df = pd.read_csv("all_results.csv")
+# %%
+aux = df[df["error_type"] == "performance"]
+aux = aux[aux["estimator"] == "Linear"]
+aux = aux[aux["data"] == "Only Shap"]
 fig = px.choropleth(
-    df,
-    locations="state_code",
-    locationmode="USA-states",
-    color="Median Sales Price ($)",
-    color_continuous_scale="Viridis_r",
-    scope="usa",
-)  # make sure 'period_begin' is string type and sorted in ascending order
-
-fig.show()
-# %%
-df
-# %%
-data = pd.read_csv("all_results_13states.csv")
-# %%
-aux = data.groupby(["state"]).mean().reset_index()
-# %%
-df
-# %%
-
-fig = px.choropleth(
-    aux,
+    aux.groupby(["state"]).mean().reset_index(),
     locations="state",
     locationmode="USA-states",
-    color="error_te",
-    color_continuous_scale="Viridis_r",
+    color="error_ood",
+    color_continuous_scale="Reds",
     scope="usa",
-)  # make sure 'period_begin' is string type and sorted in ascending order
-
+    hover_name="state",
+    hover_data=["error_ood"],
+)
 fig.show()
-# %%
-aux2 = df.groupby("state_code").mean().reset_index()
-# %%
+
+aux = df[df["error_type"] == "performance"]
+aux = aux[aux["estimator"] == "Linear"]
+aux = aux[aux["data"] == "Only Data"]
 fig = px.choropleth(
-    aux2,
-    locations="state_code",
+    aux.groupby(["state"]).mean().reset_index(),
+    locations="state",
     locationmode="USA-states",
-    color="Median Sales Price ($)",
-    color_continuous_scale="Viridis_r",
+    color="error_ood",
+    color_continuous_scale="Reds",
     scope="usa",
-)  # make sure 'period_begin' is string type and sorted in ascending order
-
+    hover_name="state",
+    hover_data=["error_ood"],
+)
 fig.show()
-# %%
-us_states = df.state_code.unique()
-# %%
 
-i = 0
-for state in data.state.unique():
-    if state not in us_states:
-        i = i + 1
-        print(state)
-# %%
-"SD" in us_states
-# %%
 
-states = [
-    "TN",
-    "CT",
-    "OH",
-    "NE",
-    "IL",
-    "FL",
-    "OK",
-    "PA",
-    "KS",
-    "IA",
-    "KY",
-    "NY",
-    "LA",
-    "TX",
-    "UT",
-    "OR",
-    "ME",
-    "NJ",
-    "ID",
-    "DE",
-    "MN",
-    "WI",
-    "CA",
-    "MO",
-    "MD",
-    "NV",
-    "HI",
-    "IN",
-    "WV",
-    "MT",
-    "WY",
-    "ND",
-    "SD",
-    "GA",
-    "NM",
-    "AZ",
-    "VA",
-    "MA",
-    "AA",
-    "NC",
-    "SC",
-    "DC",
-    "VT",
-    "AR",
-    "WA",
-    "CO",
-    "NH",
-    "MS",
-    "AK",
-    "RI",
-    "AL",
-]
-# %%
-"HI" in states
 # %%
