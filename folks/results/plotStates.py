@@ -41,17 +41,19 @@ fig.show()
 
 # %%
 aux = df[df["error_type"] == "fairness"]
-aux = aux[aux["estimator"] == "Linear"]
+aux = aux[(aux["estimator"] == "Linear") | (aux["estimator"] == "Dummy")]
 
 best = []
 for state in aux["state"].unique():
-    aux_state = aux[aux["state"] == state]
-
+    aux_state = aux[(aux["state"] == state) & (aux["estimator"] == "Linear")]
+    # Estimators
     data = aux_state[aux_state["data"] == "Only Data"].error_ood.values
     shap = aux_state[aux_state["data"] == "Only Shap"].error_ood.values
     both = aux_state[aux_state["data"] == "Data + Shap"].error_ood.values
-
-    d = {"data": data, "shap": shap, "both": both}
+    # Dummy
+    aux_state = aux[(aux["state"] == state) & (aux["estimator"] == "Dummy")]
+    dummy = aux_state.error_ood.mean()
+    d = {"data": data, "shap": shap, "both": both, "dummy": dummy}
 
     best.append([state, min(d, key=d.get)])
 
@@ -69,4 +71,5 @@ fig = px.choropleth(
     # hover_data=["error_ood"],
 )
 fig.show()
+
 # %%
