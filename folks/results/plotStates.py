@@ -2,6 +2,9 @@
 import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
+from collections import defaultdict
+
+from pyparsing import col
 
 df = pd.read_csv("all_results.csv")
 # %%
@@ -37,5 +40,33 @@ fig.show()
 
 
 # %%
+aux = df[df["error_type"] == "fairness"]
+aux = aux[aux["estimator"] == "Linear"]
 
+best = []
+for state in aux["state"].unique():
+    aux_state = aux[aux["state"] == state]
+
+    data = aux_state[aux_state["data"] == "Only Data"].error_ood.values
+    shap = aux_state[aux_state["data"] == "Only Shap"].error_ood.values
+    both = aux_state[aux_state["data"] == "Data + Shap"].error_ood.values
+
+    d = {"data": data, "shap": shap, "both": both}
+
+    best.append([state, min(d, key=d.get)])
+
+best = pd.DataFrame(best, columns=["state", "data"])
+# %%
+
+fig = px.choropleth(
+    best,
+    locations="state",
+    locationmode="USA-states",
+    color="data",
+    # color_continuous_scale="Reds",
+    scope="usa",
+    hover_name="state",
+    # hover_data=["error_ood"],
+)
+fig.show()
 # %%
