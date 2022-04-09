@@ -12,7 +12,7 @@ aux = df[df["error_type"] == "performance"]
 aux = aux[aux["estimator"] == "Linear"]
 aux = aux[aux["data"] == "Only Shap"]
 fig = px.choropleth(
-    aux.groupby(["state"]).mean().reset_index(),
+    aux.groupby(["state"]).min().reset_index(),
     locations="state",
     locationmode="USA-states",
     color="error_ood",
@@ -27,7 +27,7 @@ aux = df[df["error_type"] == "fairness"]
 aux = aux[aux["estimator"] == "Linear"]
 aux = aux[aux["data"] == "Only Data"]
 fig = px.choropleth(
-    aux.groupby(["state"]).mean().reset_index(),
+    aux.groupby(["state"]).min().reset_index(),
     locations="state",
     locationmode="USA-states",
     color="error_ood",
@@ -40,7 +40,7 @@ fig.show()
 
 
 # %%
-aux = df[df["error_type"] == "fairness"]
+aux = df[df["error_type"] == "performance"]
 aux = aux[(aux["estimator"] == "Linear") | (aux["estimator"] == "Dummy")]
 
 best = []
@@ -71,5 +71,3 @@ fig = px.choropleth(
     # hover_data=["error_ood"],
 )
 fig.show()
-
-# %%
