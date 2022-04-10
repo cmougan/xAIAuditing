@@ -71,3 +71,6 @@ fig = px.choropleth(
     # hover_data=["error_ood"],
 )
 fig.show()
+fig.write_image("../../images/best_method.svg", format="svg")
+
+# %%
