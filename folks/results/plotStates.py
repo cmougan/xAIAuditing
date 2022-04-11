@@ -22,9 +22,11 @@ fig = px.choropleth(
     hover_data=["error_ood"],
 )
 fig.show()
-
+fig.write_image("../../images/performanceUS.svg", format="svg")
+fig.write_image("../../images/performanceUS.png")
+# %%
 aux = df[df["error_type"] == "fairness"]
-aux = aux[aux["estimator"] == "Linear"]
+aux = aux[(aux["estimator"] == "Linear") & (aux["estimator"] == "XGBoost")]
 aux = aux[aux["data"] == "Only Data"]
 fig = px.choropleth(
     aux.groupby(["state"]).min().reset_index(),
@@ -59,7 +61,6 @@ for state in aux["state"].unique():
 
 best = pd.DataFrame(best, columns=["state", "data"])
 # %%
-
 fig = px.choropleth(
     best,
     locations="state",
@@ -71,6 +72,6 @@ fig = px.choropleth(
     # hover_data=["error_ood"],
 )
 fig.show()
-fig.write_image("../../images/best_method.svg", format="svg")
+fig.write_image("../../images/best_method.png")
 
 # %%
