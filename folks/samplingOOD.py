@@ -1,6 +1,4 @@
-# %%
 import warnings
-
 warnings.filterwarnings("ignore")
 from folktables import ACSDataSource, ACSIncome
 import pandas as pd
@@ -157,7 +155,6 @@ shap_test = pd.DataFrame(shap_test.values, columns=ca_features.columns)
 mi_full = mi_features.copy()
 mi_full["group"] = mi_group
 mi_full["target"] = mi_labels
-# %%
 # Trainning set
 for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     # Initiate
@@ -190,7 +187,6 @@ train_df.columns = ca_features.columns
 train_shap_df = pd.DataFrame(train_shap).T
 train_shap_df.columns = ca_features.columns
 train_shap_df = train_shap_df.add_suffix("_shap")
-# %%
 ## OOD State loop
 for state in tqdm(states, desc="States", position=0):
     print(state)
@@ -302,5 +298,3 @@ for state in tqdm(states, desc="States", position=0):
         error_type="fairness",
     )
 
-
-# %%
