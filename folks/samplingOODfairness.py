@@ -130,19 +130,22 @@ white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
 black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 # print("Test MI EO", white_tpr - black_tpr)
 
-
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 1_0
 # Init
-train = defaultdict()
-train_ood = defaultdict()
+train_one = defaultdict()
+train_two = defaultdict()
+train_ood_one = defaultdict()
+train_ood_two = defaultdict()
 performance = defaultdict()
 performance_ood = defaultdict()
-train_shap = defaultdict()
-train_shap_ood = defaultdict()
+train_shap_one = defaultdict()
+train_shap_two = defaultdict()
+train_shap_ood_one = defaultdict()
+train_shap_ood_two = defaultdict()
 eof = defaultdict()
 eof_ood = defaultdict()
 train_error = roc_auc_score(ca_labels, preds_ca)
@@ -156,11 +159,14 @@ shap_test = pd.DataFrame(shap_test.values, columns=ca_features.columns)
 mi_full = mi_features.copy()
 mi_full["group"] = mi_group
 mi_full["target"] = mi_labels
+
 # Trainning set
 for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     # Initiate
-    row = []
-    row_shap = []
+    row_one = []
+    row_two = []
+    row_shap_one = []
+    row_shap_two = []
 
     # Sampling
     aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
@@ -168,26 +174,53 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     # Shap values calculation
     shap_values = explainer(aux.drop(columns=["target", "group"]))
     shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
+    shap_values["group"] = aux.group.values
 
     for feat in ca_features.columns:
         # Michigan
-        ks = wasserstein_distance(ca_features[feat], aux[feat])
-        sh = wasserstein_distance(shap_test[feat], shap_values[feat])
-        row.append(ks)
-        row_shap.append(sh)
+        ks_one = wasserstein_distance(
+            ca_features[ca_group == 1][feat], aux[aux["group"] == 1][feat]
+        )
+        ks_two = wasserstein_distance(
+            ca_features[ca_group == 2][feat], aux[aux["group"] == 2][feat]
+        )
+        sh_one = wasserstein_distance(
+            shap_test[ca_group == 1][feat], shap_values[shap_values["group"] == 1][feat]
+        )
+        sh_two = wasserstein_distance(
+            shap_test[ca_group == 2][feat], shap_values[shap_values["group"] == 2][feat]
+        )
+        row_one.append(ks_one)
+        row_two.append(ks_two)
+        row_shap_one.append(sh_one)
+        row_shap_two.append(sh_two)
 
     # Save test
-    train_shap[i] = row_shap
-    train[i] = row
+    train_shap_one[i] = row_shap_one
+    train_one[i] = row_one
+    train_shap_two[i] = row_shap_two
+    train_two[i] = row_two
 
 # Save results
 ## Train (previous test)
-train_df = pd.DataFrame(train).T
-train_df.columns = ca_features.columns
+train_df_one = pd.DataFrame(train_one).T
+train_df_one.columns = ca_features.columns
+train_df_one = train_df_one.add_suffix("_one")
+train_df_two = pd.DataFrame(train_two).T
+train_df_two.columns = ca_features.columns
+train_df_two = train_df_one.add_suffix("_two")
+train_df = pd.concat([train_df_one, train_df_two], axis=1)
+del train_df_one, train_df_two
 
-train_shap_df = pd.DataFrame(train_shap).T
-train_shap_df.columns = ca_features.columns
-train_shap_df = train_shap_df.add_suffix("_shap")
+train_shap_df_one = pd.DataFrame(train_shap_one).T
+train_shap_df_one.columns = ca_features.columns
+train_shap_df_one = train_shap_df_one.add_suffix("_shap_one")
+train_shap_df_two = pd.DataFrame(train_shap_two).T
+train_shap_df_two.columns = ca_features.columns
+train_shap_df_two = train_shap_df_two.add_suffix("_shap_two")
+train_shap_df = pd.concat([train_shap_df_one, train_shap_df_two], axis=1)
+del train_shap_df_one, train_shap_df_two
+
 ## OOD State loop
 for state in tqdm(states, desc="States", position=0):
     print(state)
@@ -210,8 +243,10 @@ for state in tqdm(states, desc="States", position=0):
 
     # Loop to create training data
     for i in tqdm(range(0, ITERS), leave=False, desc="Bootstrap", position=1):
-        row_ood = []
-        row_shap_ood = []
+        row_ood_one = []
+        row_ood_two = []
+        row_shap_ood_one = []
+        row_shap_ood_two = []
 
         # Sampling
         aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
@@ -239,26 +274,58 @@ for state in tqdm(states, desc="States", position=0):
         shap_values_ood = pd.DataFrame(
             shap_values_ood.values, columns=ca_features.columns
         )
+        shap_values_ood["group"] = aux_ood.group.values
 
         for feat in ca_features.columns:
             # OOD
-            ks_ood = wasserstein_distance(ca_features[feat], aux_ood[feat])
-            sh_ood = wasserstein_distance(shap_test[feat], shap_values_ood[feat])
-            row_ood.append(ks_ood)
-            row_shap_ood.append(sh_ood)
+            ks_ood_one = wasserstein_distance(
+                ca_features[ca_group == 1][feat], aux_ood[aux_ood["group"] == 1][feat]
+            )
+            ks_ood_two = wasserstein_distance(
+                ca_features[ca_group == 1][feat], aux_ood[aux_ood["group"] == 2][feat]
+            )
+
+            sh_ood_one = wasserstein_distance(
+                shap_test[ca_group == 1][feat],
+                shap_values_ood[shap_values_ood["group"] == 1][feat],
+            )
+            sh_ood_two = wasserstein_distance(
+                shap_test[ca_group == 2][feat],
+                shap_values_ood[shap_values_ood["group"] == 2][feat],
+            )
+
+            row_ood_one.append(ks_ood_one)
+            row_ood_two.append(ks_ood_two)
+            row_shap_ood_one.append(sh_ood_one)
+            row_shap_ood_two.append(sh_ood_two)
 
         # Save OOD
-        train_shap_ood[i] = row_shap_ood
-        train_ood[i] = row_ood
+        train_shap_ood_one[i] = row_shap_ood_one
+        train_shap_ood_two[i] = row_shap_ood_two
+        train_ood_one[i] = row_ood_one
+        train_ood_two[i] = row_ood_two
 
     # Save results
     ## Test (previous OOD)
-    train_df_ood = pd.DataFrame(train_ood).T
-    train_df_ood.columns = ca_features.columns
+    train_df_ood_one = pd.DataFrame(train_ood_one).T
+    train_df_ood_one.columns = ca_features.columns
+    train_df_ood_one = train_df_ood_one.add_suffix("_one")
+    train_df_ood_two = pd.DataFrame(train_ood_two).T
+    train_df_ood_two.columns = ca_features.columns
+    train_df_ood_two = train_df_ood_two.add_suffix("_two")
+    train_df_ood = pd.concat([train_df_ood_one, train_df_ood_two], axis=1)
+    del train_df_ood_one, train_df_ood_two
 
-    train_shap_df_ood = pd.DataFrame(train_shap_ood).T
-    train_shap_df_ood.columns = ca_features.columns
-    train_shap_df_ood = train_shap_df_ood.add_suffix("_shap")
+    train_shap_df_ood_one = pd.DataFrame(train_shap_ood_one).T
+    train_shap_df_ood_one.columns = ca_features.columns
+    train_shap_df_ood_one = train_shap_df_ood_one.add_suffix("_shap_one")
+    train_shap_df_ood_two = pd.DataFrame(train_shap_ood_two).T
+    train_shap_df_ood_two.columns = ca_features.columns
+    train_shap_df_ood_two = train_shap_df_ood_two.add_suffix("_shap_two")
+    train_shap_df_ood = pd.concat(
+        [train_shap_df_ood_one, train_shap_df_ood_two], axis=1
+    )
+    del train_shap_df_ood_one, train_shap_df_ood_two
 
     # Estimators for the loop
     estimators = defaultdict()
