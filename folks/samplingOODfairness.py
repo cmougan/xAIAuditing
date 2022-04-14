@@ -45,7 +45,8 @@ data_source = ACSDataSource(survey_year="2016", horizon="1-Year", survey="person
 mi_data = data_source.get_data(states=["MI"], download=True)
 
 states = [
-    "MI" "TN",
+    "MI",
+    "TN",
     "CT",
     "OH",
     "NE",
