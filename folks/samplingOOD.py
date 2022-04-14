@@ -1,3 +1,4 @@
+# %%
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -135,7 +136,7 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 1_0
 # Init
 train = defaultdict()
 train_ood = defaultdict()
@@ -164,6 +165,14 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
 
     # Sampling
     aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
+
+    # Performance calculation
+    preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
+    performance[i] = train_error - roc_auc_score(aux.target, preds)
+    ## Fairness
+    white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
+    black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
+    eof[i] = eof_tr - (white_tpr - black_tpr)
 
     # Shap values calculation
     shap_values = explainer(aux.drop(columns=["target", "group"]))
@@ -298,3 +307,4 @@ for state in tqdm(states, desc="States", position=0):
         state=state,
         error_type="fairness",
     )
+    break

@@ -1,3 +1,4 @@
+# %%
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -134,7 +135,7 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 1_0
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
@@ -159,7 +160,7 @@ shap_test = pd.DataFrame(shap_test.values, columns=ca_features.columns)
 mi_full = mi_features.copy()
 mi_full["group"] = mi_group
 mi_full["target"] = mi_labels
-
+# %%
 # Trainning set
 for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     # Initiate
@@ -170,6 +171,14 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
 
     # Sampling
     aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
+
+    # Performance calculation
+    preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
+    performance[i] = train_error - roc_auc_score(aux.target, preds)
+    ## Fairness
+    white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
+    black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
+    eof[i] = eof_tr - (white_tpr - black_tpr)
 
     # Shap values calculation
     shap_values = explainer(aux.drop(columns=["target", "group"]))
@@ -220,7 +229,7 @@ train_shap_df_two.columns = ca_features.columns
 train_shap_df_two = train_shap_df_two.add_suffix("_shap_two")
 train_shap_df = pd.concat([train_shap_df_one, train_shap_df_two], axis=1)
 del train_shap_df_one, train_shap_df_two
-
+# %%
 ## OOD State loop
 for state in tqdm(states, desc="States", position=0):
     print(state)
@@ -250,14 +259,6 @@ for state in tqdm(states, desc="States", position=0):
 
         # Sampling
         aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
-
-        # Performance calculation
-        preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
-        performance[i] = train_error - roc_auc_score(aux.target, preds)
-        ## Fairness
-        white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
-        black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
-        eof[i] = eof_tr - (white_tpr - black_tpr)
 
         # OOD performance calculation
         preds_ood = model.predict_proba(aux_ood.drop(columns=["target", "group"]))[:, 1]
@@ -365,3 +366,6 @@ for state in tqdm(states, desc="States", position=0):
         state=state,
         error_type="fairness",
     )
+    break
+
+# %%
