@@ -367,6 +367,5 @@ for state in tqdm(states, desc="States", position=0):
         state=state,
         error_type="fairness",
     )
-    break
 
 # %%
