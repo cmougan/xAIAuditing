@@ -138,7 +138,7 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_0
+ITERS = 2_000
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
