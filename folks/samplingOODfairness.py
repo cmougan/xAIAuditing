@@ -32,7 +32,7 @@ from tqdm import tqdm
 import sys
 
 sys.path.append("../")
-from fairtools.utils import psi, loop_estimators
+from fairtools.utils import psi, loop_estimators, loop_estimators_fairness
 
 # Seeding
 np.random.seed(0)
@@ -126,6 +126,8 @@ preds_mi = model.predict_proba(mi_features)[:, 1]
 white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
 black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
 eof_tr = white_tpr - black_tpr
+tpr_tr_one = white_tpr
+tpr_tr_two = black_tpr
 # print("Train EO", eof_tr)
 
 white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
@@ -148,8 +150,10 @@ train_shap_one = defaultdict()
 train_shap_two = defaultdict()
 train_shap_ood_one = defaultdict()
 train_shap_ood_two = defaultdict()
-eof = defaultdict()
-eof_ood = defaultdict()
+tpr_one = defaultdict()
+tpr_two = defaultdict()
+tpr_ood_one = defaultdict()
+tpr_ood_two = defaultdict()
 train_error = roc_auc_score(ca_labels, preds_ca)
 
 # xAI Train
@@ -179,7 +183,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     ## Fairness
     white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
     black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
-    eof[i] = eof_tr - (white_tpr - black_tpr)
+    tpr_one[i] = white_tpr
+    tpr_two[i] = black_tpr
 
     # Shap values calculation
     shap_values = explainer(aux.drop(columns=["target", "group"]))
@@ -211,7 +216,7 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     train_shap_two[i] = row_shap_two
     train_two[i] = row_two
 
-# Save results
+# Some transformations
 ## Train (previous test)
 train_df_one = pd.DataFrame(train_one).T
 train_df_one.columns = ca_features.columns
@@ -219,8 +224,6 @@ train_df_one = train_df_one.add_suffix("_one")
 train_df_two = pd.DataFrame(train_two).T
 train_df_two.columns = ca_features.columns
 train_df_two = train_df_one.add_suffix("_two")
-train_df = pd.concat([train_df_one, train_df_two], axis=1)
-del train_df_one, train_df_two
 
 train_shap_df_one = pd.DataFrame(train_shap_one).T
 train_shap_df_one.columns = ca_features.columns
@@ -228,8 +231,9 @@ train_shap_df_one = train_shap_df_one.add_suffix("_shap_one")
 train_shap_df_two = pd.DataFrame(train_shap_two).T
 train_shap_df_two.columns = ca_features.columns
 train_shap_df_two = train_shap_df_two.add_suffix("_shap_two")
-train_shap_df = pd.concat([train_shap_df_one, train_shap_df_two], axis=1)
-del train_shap_df_one, train_shap_df_two
+# On the target
+tpr_one = np.array(list(tpr_one.values()))
+tpr_two = np.array(list(tpr_two.values()))
 # %%
 ## OOD State loop
 for state in tqdm(states, desc="States", position=0):
@@ -244,12 +248,6 @@ for state in tqdm(states, desc="States", position=0):
     tx_full = tx_features.copy()
     tx_full["group"] = tx_group
     tx_full["target"] = tx_labels
-
-    # Test on TX data
-    preds_tx = model.predict_proba(tx_features)[:, 1]
-    white_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 1)])
-    black_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 2)])
-    # print("Test TX EO", white_tpr - black_tpr)
 
     # Loop to create training data
     for i in tqdm(range(0, ITERS), leave=False, desc="Bootstrap", position=1):
@@ -269,7 +267,8 @@ for state in tqdm(states, desc="States", position=0):
         ## Fairness
         white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
         black_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 2)])
-        eof_ood[i] = eof_tr - (white_tpr - black_tpr)
+        tpr_ood_one[i] = white_tpr
+        tpr_ood_two[i] = black_tpr
 
         # Shap values calculation OOD
         shap_values_ood = explainer(aux_ood.drop(columns=["target", "group"]))
@@ -315,8 +314,6 @@ for state in tqdm(states, desc="States", position=0):
     train_df_ood_two = pd.DataFrame(train_ood_two).T
     train_df_ood_two.columns = ca_features.columns
     train_df_ood_two = train_df_ood_two.add_suffix("_two")
-    train_df_ood = pd.concat([train_df_ood_one, train_df_ood_two], axis=1)
-    del train_df_ood_one, train_df_ood_two
 
     train_shap_df_ood_one = pd.DataFrame(train_shap_ood_one).T
     train_shap_df_ood_one.columns = ca_features.columns
@@ -324,10 +321,9 @@ for state in tqdm(states, desc="States", position=0):
     train_shap_df_ood_two = pd.DataFrame(train_shap_ood_two).T
     train_shap_df_ood_two.columns = ca_features.columns
     train_shap_df_ood_two = train_shap_df_ood_two.add_suffix("_shap_two")
-    train_shap_df_ood = pd.concat(
-        [train_shap_df_ood_one, train_shap_df_ood_two], axis=1
-    )
-    del train_shap_df_ood_one, train_shap_df_ood_two
+    # On the target
+    tpr_ood_one = np.array(list(tpr_ood_one.values()))
+    tpr_ood_two = np.array(list(tpr_ood_two.values()))
 
     # Estimators for the loop
     estimators = defaultdict()
@@ -345,29 +341,34 @@ for state in tqdm(states, desc="States", position=0):
     )
 
     ## Loop over different G estimators
+
     # Performance
-    loop_estimators(
+    loop_estimators_fairness(
         estimator_set=estimators,
-        normal_data=train_df,
-        shap_data=train_shap_df,
-        normal_data_ood=train_df_ood,
-        shap_data_ood=train_shap_df_ood,
-        performance_ood=performance_ood,
-        target=performance,
+        normal_data=train_df_one,
+        shap_data=train_shap_df_one,
+        normal_data_ood=train_df_ood_one,
+        shap_data_ood=train_shap_df_ood_one,
+        performance_ood=tpr_tr_one - tpr_ood_one,
+        target=tpr_tr_one - tpr_one,
         state=state,
-        error_type="performance",
+        error_type="fairness_one",
     )
     # Fairness
-    loop_estimators(
+    loop_estimators_fairness(
         estimator_set=estimators,
-        normal_data=train_df,
-        shap_data=train_shap_df,
-        normal_data_ood=train_df_ood,
-        shap_data_ood=train_shap_df_ood,
-        performance_ood=eof_ood,
-        target=eof,
+        normal_data=train_df_two,
+        shap_data=train_shap_df_two,
+        normal_data_ood=train_df_ood_two,
+        shap_data_ood=train_shap_df_ood_two,
+        performance_ood=tpr_tr_two - tpr_ood_two,
+        target=tpr_tr_one - tpr_one,
         state=state,
-        error_type="fairness",
+        error_type="fairness_two",
     )
     break
+
+
+# %%
+# tpr_two
 # %%

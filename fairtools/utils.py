@@ -292,3 +292,70 @@ def loop_estimators(
     folder = os.path.join("results", state + "_" + error_type + ".csv")
     columnas = ["state", "error_type", "estimator", "data", "error_te", "error_ood"]
     pd.DataFrame(res, columns=columnas).to_csv(folder, index=False)
+
+
+def loop_estimators_fairness(
+    estimator_set: list,
+    normal_data,
+    normal_data_ood,
+    shap_data,
+    shap_data_ood,
+    performance_ood,
+    target,
+    state: str,
+    error_type: str,
+    output_path: str = "",
+):
+    """
+    Loop through the estimators and calculate the performance for each
+    Particular fairness case
+    """
+    res = []
+
+    for estimator in estimator_set:
+        ## ONLY DATA
+        X_train, X_test, y_train, y_test = train_test_split(
+            normal_data, target, test_size=0.33, random_state=42
+        )
+        estimator_set[estimator].fit(X_train, y_train)
+        error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
+        error_ood = mean_absolute_error(
+            estimator_set[estimator].predict(normal_data_ood),
+            np.nan_to_num(performance_ood),
+        )
+
+        res.append([state, error_type, estimator, "Only Data", error_te, error_ood])
+
+        #### ONLY SHAP
+        X_train, X_test, y_train, y_test = train_test_split(
+            shap_data, target, test_size=0.33, random_state=42
+        )
+        estimator_set[estimator].fit(X_train, y_train)
+        error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
+        error_ood = mean_absolute_error(
+            estimator_set[estimator].predict(shap_data_ood),
+            np.nan_to_num(performance_ood),
+        )
+
+        res.append([state, error_type, estimator, "Only Shap", error_te, error_ood])
+
+        ### SHAP + DATA
+        X_train, X_test, y_train, y_test = train_test_split(
+            pd.concat([shap_data, normal_data], axis=1),
+            target,
+            test_size=0.33,
+            random_state=42,
+        )
+        estimator_set[estimator].fit(X_train, y_train)
+        error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
+        error_ood = mean_absolute_error(
+            estimator_set[estimator].predict(
+                pd.concat([shap_data_ood, normal_data_ood], axis=1)
+            ),
+            np.nan_to_num(performance_ood),
+        )
+        res.append([state, error_type, estimator, "Data + Shap", error_te, error_ood])
+
+    folder = os.path.join("results", state + "_" + error_type + ".csv")
+    columnas = ["state", "error_type", "estimator", "data", "error_te", "error_ood"]
+    pd.DataFrame(res, columns=columnas).to_csv(folder, index=False)
