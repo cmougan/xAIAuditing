@@ -321,9 +321,12 @@ for state in tqdm(states, desc="States", position=0):
     train_shap_df_ood_two = pd.DataFrame(train_shap_ood_two).T
     train_shap_df_ood_two.columns = ca_features.columns
     train_shap_df_ood_two = train_shap_df_ood_two.add_suffix("_shap_two")
-    # On the target
-    tpr_ood_one = np.array(list(tpr_ood_one.values()))
-    tpr_ood_two = np.array(list(tpr_ood_two.values()))
+    # On the targe
+    try:
+        tpr_ood_one = np.array(list(tpr_ood_one.values()))
+        tpr_ood_two = np.array(list(tpr_ood_two.values()))
+    except:
+        pass
 
     # Estimators for the loop
     estimators = defaultdict()
