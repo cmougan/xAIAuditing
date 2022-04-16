@@ -361,8 +361,8 @@ for state in tqdm(states, desc="States", position=0):
         shap_data=train_shap_df_two,
         normal_data_ood=train_df_ood_two,
         shap_data_ood=train_shap_df_ood_two,
-        performance_ood=tpr_tr_two - tpr_ood_two,
-        target=tpr_tr_one - tpr_one,
+        performance_ood=tpr_ood_two - tpr_tr_two,
+        target=tpr_two - tpr_tr_two,
         state=state,
         error_type="fairness_two",
     )
