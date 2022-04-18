@@ -13,9 +13,9 @@ for file in files:
         if file != "all_results.csv":
             if file != "all_results_fairness.csv":
                 data = data.append(pd.read_csv(file))
-# data.to_csv("all_results.csv", index=False)
+data.to_csv("all_results.csv", index=False)
+"""
 
-# %%
 df = pd.DataFrame()
 for STATE in data.state.unique():
     aux = data[(data["state"] == STATE) & (data["error_type"] == "fairness_one")]
@@ -50,3 +50,4 @@ df = df.drop(columns=["y1_te", "y2_te", "y1_ood", "y2_ood"])
 df.to_csv("all_results_fairness.csv", index=False)
 
 # %%
+"""
