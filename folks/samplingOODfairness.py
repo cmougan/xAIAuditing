@@ -2,7 +2,7 @@
 import warnings
 
 warnings.filterwarnings("ignore")
-from folktables import ACSDataSource, ACSIncome
+from folktables import ACSDataSource, ACSIncome,ACSEmployment
 import pandas as pd
 from collections import defaultdict
 from scipy.stats import kstest, wasserstein_distance
