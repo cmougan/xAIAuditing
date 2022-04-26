@@ -295,15 +295,4 @@ for state in tqdm(states, desc="States", position=0):
         state=state,
         error_type="performance",
     )
-    # Fairness
-    loop_estimators(
-        estimator_set=estimators,
-        normal_data=train_df,
-        shap_data=train_shap_df,
-        normal_data_ood=train_df_ood,
-        shap_data_ood=train_shap_df_ood,
-        performance_ood=eof_ood,
-        target=eof,
-        state=state,
-        error_type="fairness",
-    )
+
