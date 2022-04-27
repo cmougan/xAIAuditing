@@ -45,7 +45,8 @@ data_source = ACSDataSource(survey_year="2016", horizon="1-Year", survey="person
 mi_data = data_source.get_data(states=["MI"], download=True)
 
 states = [
-    "MI" "TN",
+    "MI",
+    "TN",
     "CT",
     "OH",
     "NE",
@@ -102,12 +103,12 @@ states = [
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
 
 
-ca_features, ca_labels, ca_group = ACSEmployment.df_to_numpy(ca_data)
-mi_features, mi_labels, mi_group = ACSEmployment.df_to_numpy(mi_data)
+ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
+mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
 
 ## Conver to DF
-ca_features = pd.DataFrame(ca_features, columns=ACSEmployment.features)
-mi_features = pd.DataFrame(mi_features, columns=ACSEmployment.features)
+ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
+mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 
 # Modeling
 model = XGBClassifier(verbosity=0, silent=True, use_label_encoder=False, njobs=1)
@@ -119,17 +120,6 @@ preds_ca = cross_val_predict(
 model.fit(ca_features, ca_labels)
 # Test on MI data
 preds_mi = model.predict_proba(mi_features)[:, 1]
-
-
-##Fairness
-white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
-black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
-eof_tr = white_tpr - black_tpr
-# print("Train EO", eof_tr)
-
-white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
-black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
-# print("Test MI EO", white_tpr - black_tpr)
 
 
 ## Can we learn to solve this issue?
@@ -144,8 +134,6 @@ performance = defaultdict()
 performance_ood = defaultdict()
 train_shap = defaultdict()
 train_shap_ood = defaultdict()
-eof = defaultdict()
-eof_ood = defaultdict()
 train_error = roc_auc_score(ca_labels, preds_ca)
 
 # xAI Train
@@ -169,10 +157,6 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     # Performance calculation
     preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
     performance[i] = train_error - roc_auc_score(aux.target, preds)
-    ## Fairness
-    white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
-    black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
-    eof[i] = eof_tr - (white_tpr - black_tpr)
 
     # Shap values calculation
     shap_values = explainer(aux.drop(columns=["target", "group"]))
@@ -203,19 +187,13 @@ for state in tqdm(states, desc="States", position=0):
 
     # Load and process data
     tx_data = data_source.get_data(states=["HI"], download=True)
-    tx_features, tx_labels, tx_group = ACSEmployment.df_to_numpy(tx_data)
-    tx_features = pd.DataFrame(tx_features, columns=ACSEmployment.features)
+    tx_features, tx_labels, tx_group = ACSIncome.df_to_numpy(tx_data)
+    tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 
     # Lets add the target to ease the sampling
     tx_full = tx_features.copy()
     tx_full["group"] = tx_group
     tx_full["target"] = tx_labels
-
-    # Test on TX data
-    preds_tx = model.predict_proba(tx_features)[:, 1]
-    white_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 1)])
-    black_tpr = np.mean(preds_tx[(tx_labels == 1) & (tx_group == 2)])
-    # print("Test TX EO", white_tpr - black_tpr)
 
     # Loop to create training data
     for i in tqdm(range(0, ITERS), leave=False, desc="Bootstrap", position=1):
@@ -225,23 +203,11 @@ for state in tqdm(states, desc="States", position=0):
         # Sampling
         aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
 
-        # Performance calculation
-        preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
-        performance[i] = train_error - roc_auc_score(aux.target, preds)
-        ## Fairness
-        white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
-        black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
-        eof[i] = eof_tr - (white_tpr - black_tpr)
-
         # OOD performance calculation
         preds_ood = model.predict_proba(aux_ood.drop(columns=["target", "group"]))[:, 1]
         performance_ood[i] = train_error - roc_auc_score(
             aux_ood.target.values, preds_ood
         )
-        ## Fairness
-        white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
-        black_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 2)])
-        eof_ood[i] = eof_tr - (white_tpr - black_tpr)
 
         # Shap values calculation OOD
         shap_values_ood = explainer(aux_ood.drop(columns=["target", "group"]))
