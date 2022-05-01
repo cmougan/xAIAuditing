@@ -3,14 +3,14 @@ import pandas as pd
 import numpy as np
 
 # %%
-df = pd.read_csv("all_results_fairness_employment.csv")
+df = pd.read_csv("all_results_travelTime.csv")
 
 df.data = df.data.replace("Only Data", "Data")
 df.data = df.data.replace("Only Shap", "Shap")
 df.data = df.data.replace("Data + Shap", "Shap + Data")
 
 df = df[df["error_type"] == "fairness_two"]
-# dff = df[df["error_type"] == "fairness_one"]
+# df = df[df["error_type"] == "fairness_one"]
 # df = df[df["error_type"] == "performance"]
 df = df.drop(columns="error_te")
 # df = df[df['state']=='WA']
