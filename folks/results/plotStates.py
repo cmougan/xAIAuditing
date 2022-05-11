@@ -3,10 +3,14 @@ import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
 from collections import defaultdict
-
+import numpy as np
 from pyparsing import col
 
-df = pd.read_csv("all_results.csv")
+df = pd.read_csv("all_results_performnnce.csv")
+# %%
+df.data = np.where(df.data == "Only Data", "Distribution Shift", df.data)
+df.data = np.where(df.data == "Only Shap", "Explanation Shift", df.data)
+df.data = np.where(df.data == "Data + Shap", "Exp+Dist Shift", df.data)
 # %%
 aux = df[df["error_type"] == "performance"]
 aux = aux[aux["estimator"] == "Linear"]
@@ -49,13 +53,18 @@ best = []
 for state in aux["state"].unique():
     aux_state = aux[(aux["state"] == state) & (aux["estimator"] == "Linear")]
     # Estimators
-    data = aux_state[aux_state["data"] == "Only Data"].error_ood.values
-    shap = aux_state[aux_state["data"] == "Only Shap"].error_ood.values
-    both = aux_state[aux_state["data"] == "Data + Shap"].error_ood.values
+    data = aux_state[aux_state["data"] == "Distribution Shift"].error_ood.values
+    shap = aux_state[aux_state["data"] == "Explanation Shift"].error_ood.values
+    both = aux_state[aux_state["data"] == "Exp+Dist Shift"].error_ood.values
     # Dummy
     aux_state = aux[(aux["state"] == state) & (aux["estimator"] == "Dummy")]
     dummy = aux_state.error_ood.mean()
-    d = {"data": data, "shap": shap, "both": both, "dummy": dummy}
+    d = {
+        "Distribution Shift": data,
+        "Explanation Shift": shap,
+        "Exp+Dist Shift": both,
+        "dummy": dummy,
+    }
 
     best.append([state, min(d, key=d.get)])
 
