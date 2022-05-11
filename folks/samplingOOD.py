@@ -111,12 +111,12 @@ states = [
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
 
 
-ca_features, ca_labels, ca_group = ACSTravelTime.df_to_numpy(ca_data)
-mi_features, mi_labels, mi_group = ACSTravelTime.df_to_numpy(mi_data)
+ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
+mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
 
 ## Conver to DF
-ca_features = pd.DataFrame(ca_features, columns=ACSTravelTime.features)
-mi_features = pd.DataFrame(mi_features, columns=ACSTravelTime.features)
+ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
+mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 
 # Modeling
 model = XGBClassifier(verbosity=0, silent=True, use_label_encoder=False, njobs=1)
@@ -172,8 +172,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
 
     for feat in ca_features.columns:
         # Michigan
-        ks = wasserstein_distance(ca_features[feat], aux[feat])
-        sh = wasserstein_distance(shap_test[feat], shap_values[feat])
+        ks = kstest(ca_features[feat], aux[feat]).statistic
+        sh = kstest(shap_test[feat], shap_values[feat]).statistic
         row.append(ks)
         row_shap.append(sh)
 
@@ -195,8 +195,8 @@ for state in tqdm(states, desc="States", position=0):
 
     # Load and process data
     tx_data = data_source.get_data(states=["HI"], download=True)
-    tx_features, tx_labels, tx_group = ACSTravelTime.df_to_numpy(tx_data)
-    tx_features = pd.DataFrame(tx_features, columns=ACSTravelTime.features)
+    tx_features, tx_labels, tx_group = ACSIncome.df_to_numpy(tx_data)
+    tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 
     # Lets add the target to ease the sampling
     tx_full = tx_features.copy()
@@ -225,8 +225,8 @@ for state in tqdm(states, desc="States", position=0):
 
         for feat in ca_features.columns:
             # OOD
-            ks_ood = wasserstein_distance(ca_features[feat], aux_ood[feat])
-            sh_ood = wasserstein_distance(shap_test[feat], shap_values_ood[feat])
+            ks_ood = kstest(ca_features[feat], aux_ood[feat]).statistic
+            sh_ood = kstest(shap_test[feat], shap_values_ood[feat]).statistic
             row_ood.append(ks_ood)
             row_shap_ood.append(sh_ood)
 

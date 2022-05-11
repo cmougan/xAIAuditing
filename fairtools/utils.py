@@ -356,6 +356,6 @@ def loop_estimators_fairness(
         )
         res.append([state, error_type, estimator, "Data + Shap", error_te, error_ood])
 
-    folder = os.path.join("results", state + "_" + error_type + ".csv")
+    folder = os.path.join("results", state + "_" + error_type + "2.csv")
     columnas = ["state", "error_type", "estimator", "data", "error_te", "error_ood"]
     pd.DataFrame(res, columns=columnas).to_csv(folder, index=False)
