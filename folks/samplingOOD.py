@@ -172,8 +172,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
 
     for feat in ca_features.columns:
         # Michigan
-        ks = kstest(ca_features[feat], aux[feat]).statistic
-        sh = kstest(shap_test[feat], shap_values[feat]).statistic
+        ks = psi(ca_features[feat], aux[feat])
+        sh = psi(shap_test[feat], shap_values[feat])
         row.append(ks)
         row_shap.append(sh)
 
@@ -225,8 +225,8 @@ for state in tqdm(states, desc="States", position=0):
 
         for feat in ca_features.columns:
             # OOD
-            ks_ood = kstest(ca_features[feat], aux_ood[feat]).statistic
-            sh_ood = kstest(shap_test[feat], shap_values_ood[feat]).statistic
+            ks_ood = psi(ca_features[feat], aux_ood[feat])
+            sh_ood = psi(shap_test[feat], shap_values_ood[feat])
             row_ood.append(ks_ood)
             row_shap_ood.append(sh_ood)
 
