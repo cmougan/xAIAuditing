@@ -9,15 +9,15 @@ df.data = df.data.replace("Only Data", "Data")
 df.data = df.data.replace("Only Shap", "Shap")
 df.data = df.data.replace("Data + Shap", "Shap + Data")
 
-#df = df[df["error_type"] == "fairness_two"]
-#df = df[df["error_type"] == "fairness_one"]
+# df = df[df["error_type"] == "fairness_two"]
+# df = df[df["error_type"] == "fairness_one"]
 df = df[df["error_type"] == "performance"]
 df = df.drop(columns="error_te")
 # df = df[df['state']=='WA']
 df = df[
     (df["estimator"] == "Linear")
     | (df["estimator"] == "Dummy")
-     | (df["estimator"] == "RandomForest")
+    | (df["estimator"] == "RandomForest")
     # | (df["estimator"] == "SVM")
     | (df["estimator"] == "XGBoost")
 ]
