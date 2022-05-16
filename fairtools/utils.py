@@ -259,20 +259,20 @@ def loop_estimators(
         )
 
         res.append([state, error_type, estimator, "Only Data", error_te, error_ood])
-
-        #### ONLY SHAP
-        X_train, X_test, y_train, y_test = train_test_split(
-            shap_data, target, test_size=0.33, random_state=42
-        )
-        estimator_set[estimator].fit(X_train, y_train)
-        error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
-        error_ood = mean_absolute_error(
-            estimator_set[estimator].predict(shap_data_ood),
-            np.nan_to_num(list(performance_ood.values())),
-        )
-
-        res.append([state, error_type, estimator, "Only Shap", error_te, error_ood])
         if target_shift == False:
+            #### ONLY SHAP
+            X_train, X_test, y_train, y_test = train_test_split(
+                shap_data, target, test_size=0.33, random_state=42
+            )
+            estimator_set[estimator].fit(X_train, y_train)
+            error_te = mean_absolute_error(estimator_set[estimator].predict(X_test), y_test)
+            error_ood = mean_absolute_error(
+                estimator_set[estimator].predict(shap_data_ood),
+                np.nan_to_num(list(performance_ood.values())),
+            )
+
+            res.append([state, error_type, estimator, "Only Shap", error_te, error_ood])
+            
             ### SHAP + DATA
             X_train, X_test, y_train, y_test = train_test_split(
                 pd.concat([shap_data, normal_data], axis=1),
