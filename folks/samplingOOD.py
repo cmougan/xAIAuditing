@@ -133,8 +133,8 @@ preds_mi = model.predict_proba(mi_features)[:, 1]
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 1_00
-ITERS = 2_00
+SAMPLE_FRAC = 1_000
+ITERS = 2_000
 # Init
 train = defaultdict()
 train_target_shift = defaultdict()
