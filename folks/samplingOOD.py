@@ -180,7 +180,7 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
 
         row.append(ks)
         row_shap.append(sh)
-    # Targte shift
+    # Target shift
     ks_target_shift = wasserstein_distance(ca_labels, aux["target"])
     row_target_shift.append(ks_target_shift)
     # Save test
