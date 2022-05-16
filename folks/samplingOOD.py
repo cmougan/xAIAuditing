@@ -40,7 +40,7 @@ from tqdm import tqdm
 import sys
 
 sys.path.append("../")
-from fairtools.utils import psi, loop_estimators
+from fairtools.utils import loop_estimators_fairness, psi, loop_estimators
 
 # Seeding
 np.random.seed(0)
@@ -133,13 +133,15 @@ preds_mi = model.predict_proba(mi_features)[:, 1]
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 1_000
-ITERS = 2_000
+SAMPLE_FRAC = 1_00
+ITERS = 2_00
 # Init
 train = defaultdict()
+train_target_shift = defaultdict()
+train_target_shift_ood = defaultdict()
 train_ood = defaultdict()
 performance = defaultdict()
-performance_ood = defaultdict()
+
 train_shap = defaultdict()
 train_shap_ood = defaultdict()
 train_error = roc_auc_score(ca_labels, preds_ca)
@@ -157,6 +159,7 @@ mi_full["target"] = mi_labels
 for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     # Initiate
     row = []
+    row_target_shift = []
     row_shap = []
 
     # Sampling
@@ -174,12 +177,17 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
         # Michigan
         ks = psi(ca_features[feat], aux[feat])
         sh = psi(shap_test[feat], shap_values[feat])
+
         row.append(ks)
         row_shap.append(sh)
-
+    # Targte shift
+    ks_target_shift = wasserstein_distance(ca_labels, aux["target"])
+    row_target_shift.append(ks_target_shift)
     # Save test
+
     train_shap[i] = row_shap
     train[i] = row
+    train_target_shift[i] = row_target_shift
 
 # Save results
 ## Train (previous test)
@@ -189,9 +197,17 @@ train_df.columns = ca_features.columns
 train_shap_df = pd.DataFrame(train_shap).T
 train_shap_df.columns = ca_features.columns
 train_shap_df = train_shap_df.add_suffix("_shap")
+
+train_target_shift_df = pd.DataFrame(train_target_shift, index=[0]).T
+train_target_shift_df.columns = ["target"]
+
+# On the target
+performance = pd.DataFrame(performance, index=[0]).T.values
 ## OOD State loop
 for state in tqdm(states, desc="States", position=0):
     print(state)
+    # Initialize some lists
+    performance_ood = defaultdict()
 
     # Load and process data
     tx_data = data_source.get_data(states=["HI"], download=True)
@@ -204,9 +220,10 @@ for state in tqdm(states, desc="States", position=0):
     tx_full["target"] = tx_labels
 
     # Loop to create training data
-    for i in tqdm(range(0, ITERS), leave=False, desc="Bootstrap", position=1):
+    for i in tqdm(range(0, int(ITERS / 10)), leave=False, desc="Bootstrap", position=1):
         row_ood = []
         row_shap_ood = []
+        row_target_shift_ood = []
 
         # Sampling
         aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
@@ -230,9 +247,13 @@ for state in tqdm(states, desc="States", position=0):
             row_ood.append(ks_ood)
             row_shap_ood.append(sh_ood)
 
+        # Target shift
+        ks_target_shift_ood = wasserstein_distance(ca_labels, aux_ood["target"])
+        row_target_shift_ood = ks_target_shift_ood
         # Save OOD
         train_shap_ood[i] = row_shap_ood
         train_ood[i] = row_ood
+        train_target_shift_ood[i] = row_target_shift_ood
 
     # Save results
     ## Test (previous OOD)
@@ -242,6 +263,9 @@ for state in tqdm(states, desc="States", position=0):
     train_shap_df_ood = pd.DataFrame(train_shap_ood).T
     train_shap_df_ood.columns = ca_features.columns
     train_shap_df_ood = train_shap_df_ood.add_suffix("_shap")
+
+    train_target_shift_df_ood = pd.DataFrame(train_target_shift_ood, index=[0]).T
+    train_target_shift_df_ood.columns = ["target"]
 
     # Estimators for the loop
     estimators = defaultdict()
@@ -257,15 +281,23 @@ for state in tqdm(states, desc="States", position=0):
     estimators["MLP"] = MLPRegressor(random_state=0)
 
     ## Loop over different G estimators
+    # Some target transformations
+    performance_ood = pd.DataFrame(performance_ood, index=[0]).T.values
+
     # Performance
-    loop_estimators(
+    loop_estimators_fairness(
         estimator_set=estimators,
         normal_data=train_df,
-        shap_data=train_shap_df,
         normal_data_ood=train_df_ood,
+        shap_data=train_shap_df,
         shap_data_ood=train_shap_df_ood,
+        target_shift=train_target_shift_df,
+        target_shift_ood=train_target_shift_df_ood,
         performance_ood=performance_ood,
         target=performance,
         state=state,
         error_type="performance",
     )
+
+
+# %%
