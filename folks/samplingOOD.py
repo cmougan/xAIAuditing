@@ -49,7 +49,7 @@ random.seed(0)
 # Load data
 data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
 ca_data = data_source.get_data(states=["CA"], download=True)
-data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
+data_source = ACSDataSource(survey_year="2015", horizon="1-Year", survey="person")
 mi_data = data_source.get_data(states=["CA"], download=True)
 # %%
 states = [
