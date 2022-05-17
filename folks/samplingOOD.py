@@ -51,7 +51,7 @@ data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person
 ca_data = data_source.get_data(states=["CA"], download=True)
 data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
 mi_data = data_source.get_data(states=["CA"], download=True)
-
+# %%
 states = [
     "MI",
     "TN",
@@ -134,7 +134,7 @@ preds_mi = model.predict_proba(mi_features)[:, 1]
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 5_000
 # Init
 train = defaultdict()
 train_target_shift = defaultdict()
@@ -220,7 +220,7 @@ for state in tqdm(states, desc="States", position=0):
     tx_full["target"] = tx_labels
 
     # Loop to create training data
-    for i in tqdm(range(0, int(ITERS / 10)), leave=False, desc="Bootstrap", position=1):
+    for i in tqdm(range(0, int(ITERS / 20)), leave=False, desc="Bootstrap", position=1):
         row_ood = []
         row_shap_ood = []
         row_target_shift_ood = []
