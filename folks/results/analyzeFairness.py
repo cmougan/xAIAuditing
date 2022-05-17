@@ -43,29 +43,31 @@ pd.pivot_table(df, columns=["estimator", "data",], index=["state"],).T.sort_valu
     decimals=4
 ).style.highlight_min()  # .to_csv("state_fairness.csv")
 # %%
-aux = pd.pivot_table(
-    df,
-    index=[
-        "estimator",
-        "data",
-    ],
-    aggfunc=[np.mean, np.std, np.median],
-).sort_values(by=["estimator", "data"], ascending=True).round(
-    decimals=6
-)#.style.highlight_min()
+aux = (
+    pd.pivot_table(
+        df,
+        index=[
+            "estimator",
+            "data",
+        ],
+        aggfunc=[np.mean, np.std, np.median],
+    )
+    .sort_values(by=["estimator", "data"], ascending=True)
+    .round(decimals=6)
+)  # .style.highlight_min()
 # .to_csv("total_mean_fairness.csv")#.style.highlight_min()
 aux = aux.reset_index()
 
-aux = pd.DataFrame(aux.values,columns=['Estimator','Data','Mean','Std','Median'])
-aux = aux.drop(columns=['Std','Median'])
-base = aux[aux.Estimator=='Dummy'].Mean.mean()
-aux = aux[aux.Estimator!='Dummy']
-aux = aux.sort_values(by='Data',ascending=False)
+aux = pd.DataFrame(aux.values, columns=["Estimator", "Data", "Mean", "Std", "Median"])
+aux = aux.drop(columns=["Std", "Median"])
+base = aux[aux.Estimator == "Dummy"].Mean.mean()
+aux = aux[aux.Estimator != "Dummy"]
+aux = aux.sort_values(by="Data", ascending=False)
 # %%
 plt.figure()
 sns.barplot(x="Estimator", y="Mean", hue="Data", data=aux)
-plt.axhline(base, color="black", linestyle="--",label='Baseline')
-plt.ylabel('Error on quantification of model performance')
+plt.axhline(base, color="black", linestyle="--", label="Baseline")
+plt.ylabel("Error on quantification of model performance")
 plt.legend()
 plt.show()
 # %%

@@ -58,7 +58,14 @@ for state in aux["state"].unique():
     # Dummy
     aux_state = aux[(aux["state"] == state) & (aux["estimator"] == "Dummy")]
     dummy = aux_state.error_ood.mean()
-    d = {"Distribution Shift": data,'Prediction Shift':target,'Dist+Pred Shift':dataTarget, "Explanation Shift": shap, "Dist+Targ+Exp Shift": all, "dummy": dummy}
+    d = {
+        "Distribution Shift": data,
+        "Prediction Shift": target,
+        "Dist+Pred Shift": dataTarget,
+        "Explanation Shift": shap,
+        "Dist+Targ+Exp Shift": all,
+        "dummy": dummy,
+    }
 
     best.append([state, min(d, key=d.get)])
 

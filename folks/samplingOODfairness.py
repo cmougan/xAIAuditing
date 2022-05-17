@@ -187,7 +187,7 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     row_shap_two = []
 
     # Sampling
-    aux = mi_full.sample(n=SAMPLE_FRAC*100, replace=True)
+    aux = mi_full.sample(n=SAMPLE_FRAC * 100, replace=True)
 
     # Performance calculation
     preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
