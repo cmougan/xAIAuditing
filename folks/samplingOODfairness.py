@@ -110,12 +110,12 @@ states = [
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
 
 
-ca_features, ca_labels, ca_group = ACSTravelTime.df_to_numpy(ca_data)
-mi_features, mi_labels, mi_group = ACSTravelTime.df_to_numpy(mi_data)
+ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
+mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
 
 ## Conver to DF
-ca_features = pd.DataFrame(ca_features, columns=ACSTravelTime.features)
-mi_features = pd.DataFrame(mi_features, columns=ACSTravelTime.features)
+ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
+mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 
 # Modeling
 model = XGBClassifier(verbosity=0, silent=True, use_label_encoder=False, njobs=1)
@@ -144,8 +144,8 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 1_000
-ITERS = 2_000
+SAMPLE_FRAC = 2_00
+ITERS = 2_00
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
@@ -157,6 +157,11 @@ train_shap_one = defaultdict()
 train_shap_two = defaultdict()
 train_shap_ood_one = defaultdict()
 train_shap_ood_two = defaultdict()
+
+train_one_target_shift = defaultdict()
+train_two_target_shift = defaultdict()
+train_one_target_shift_ood = defaultdict()
+train_two_target_shift_ood = defaultdict()
 tpr_one = defaultdict()
 tpr_two = defaultdict()
 tpr_ood_one = defaultdict()
@@ -216,12 +221,23 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
         row_two.append(ks_two)
         row_shap_one.append(sh_one)
         row_shap_two.append(sh_two)
+    # Target shift
+    ks_one_target = wasserstein_distance(
+        ca_labels[ca_group == 1], aux[aux["group"] == 1]["target"]
+    )
+    ks_two_target = wasserstein_distance(
+        ca_labels[ca_group == 2], aux[aux["group"] == 2]["target"]
+    )
+
+    train_one_target_shift[i] = ks_one_target
+    train_two_target_shift[i] = ks_two_target
 
     # Save test
     train_shap_one[i] = row_shap_one
     train_one[i] = row_one
     train_shap_two[i] = row_shap_two
     train_two[i] = row_two
+
 
 # Some transformations
 ## Train (previous test)
@@ -238,6 +254,12 @@ train_shap_df_one = train_shap_df_one.add_suffix("_shap_one")
 train_shap_df_two = pd.DataFrame(train_shap_two).T
 train_shap_df_two.columns = ca_features.columns
 train_shap_df_two = train_shap_df_two.add_suffix("_shap_two")
+
+# On the target shift
+train_one_target_shift_df = pd.DataFrame(train_one_target_shift, index=[0]).T
+train_one_target_shift_df.columns = ["target"]
+train_two_target_shift_df = pd.DataFrame(train_two_target_shift, index=[0]).T
+train_two_target_shift_df.columns = ["target"]
 # On the target
 tpr_one = np.array(list(tpr_one.values()))
 tpr_two = np.array(list(tpr_two.values()))
@@ -248,8 +270,8 @@ for state in tqdm(states, desc="States", position=0):
 
     # Load and process data
     tx_data = data_source.get_data(states=["HI"], download=True)
-    tx_features, tx_labels, tx_group = ACSTravelTime.df_to_numpy(tx_data)
-    tx_features = pd.DataFrame(tx_features, columns=ACSTravelTime.features)
+    tx_features, tx_labels, tx_group = ACSIncome.df_to_numpy(tx_data)
+    tx_features = pd.DataFrame(tx_features, columns=ACSIncome.features)
 
     # Lets add the target to ease the sampling
     tx_full = tx_features.copy()
@@ -257,7 +279,7 @@ for state in tqdm(states, desc="States", position=0):
     tx_full["target"] = tx_labels
 
     # Loop to create training data
-    for i in tqdm(range(0, ITERS), leave=False, desc="Bootstrap", position=1):
+    for i in tqdm(range(0, int(ITERS / 10)), leave=False, desc="Bootstrap", position=1):
         row_ood_one = []
         row_ood_two = []
         row_shap_ood_one = []
@@ -290,7 +312,7 @@ for state in tqdm(states, desc="States", position=0):
                 ca_features[ca_group == 1][feat], aux_ood[aux_ood["group"] == 1][feat]
             )
             ks_ood_two = wasserstein_distance(
-                ca_features[ca_group == 1][feat], aux_ood[aux_ood["group"] == 2][feat]
+                ca_features[ca_group == 2][feat], aux_ood[aux_ood["group"] == 2][feat]
             )
 
             sh_ood_one = wasserstein_distance(
@@ -306,6 +328,16 @@ for state in tqdm(states, desc="States", position=0):
             row_ood_two.append(ks_ood_two)
             row_shap_ood_one.append(sh_ood_one)
             row_shap_ood_two.append(sh_ood_two)
+        # Target shift
+        ks_one_target = wasserstein_distance(
+            ca_labels[ca_group == 1], aux[aux["group"] == 1]["target"]
+        )
+        ks_two_target = wasserstein_distance(
+            ca_labels[ca_group == 2], aux[aux["group"] == 2]["target"]
+        )
+
+        train_one_target_shift_ood[i] = ks_one_target
+        train_two_target_shift_ood[i] = ks_two_target
 
         # Save OOD
         train_shap_ood_one[i] = row_shap_ood_one
@@ -328,7 +360,17 @@ for state in tqdm(states, desc="States", position=0):
     train_shap_df_ood_two = pd.DataFrame(train_shap_ood_two).T
     train_shap_df_ood_two.columns = ca_features.columns
     train_shap_df_ood_two = train_shap_df_ood_two.add_suffix("_shap_two")
-    # On the targe
+
+    # Target Shift
+    train_one_target_shift_df_ood = pd.DataFrame(
+        train_one_target_shift_ood, index=[0]
+    ).T
+    train_one_target_shift_df_ood.columns = ["target"]
+    train_two_target_shift_df_ood = pd.DataFrame(
+        train_two_target_shift_ood, index=[0]
+    ).T
+    train_two_target_shift_df_ood.columns = ["target"]
+    # On the target
     try:
         tpr_ood_one = np.array(list(tpr_ood_one.values()))
         tpr_ood_two = np.array(list(tpr_ood_two.values()))
@@ -345,7 +387,7 @@ for state in tqdm(states, desc="States", position=0):
     estimators["XGBoost"] = XGBRegressor(
         verbosity=0, verbose=0, silent=True, random_state=0
     )
-    estimators["SVM"] = Pipeline([("scaler", StandardScaler()), ("model", SVR())])
+    estimators["SVM"] = Pipeline([("scaler", StandardScaler()), ("model", SVR(C=0.01))])
     estimators["MLP"] = Pipeline(
         [("scaler", StandardScaler()), ("model", MLPRegressor(random_state=0))]
     )
@@ -356,9 +398,11 @@ for state in tqdm(states, desc="States", position=0):
     loop_estimators_fairness(
         estimator_set=estimators,
         normal_data=train_df_one,
-        shap_data=train_shap_df_one,
         normal_data_ood=train_df_ood_one,
+        shap_data=train_shap_df_one,
         shap_data_ood=train_shap_df_ood_one,
+        target_shift=train_two_target_shift_df,
+        target_shift_ood=train_two_target_shift_df_ood,
         performance_ood=tpr_tr_one - tpr_ood_one,
         target=tpr_tr_one - tpr_one,
         state=state,
@@ -368,9 +412,11 @@ for state in tqdm(states, desc="States", position=0):
     loop_estimators_fairness(
         estimator_set=estimators,
         normal_data=train_df_two,
-        shap_data=train_shap_df_two,
         normal_data_ood=train_df_ood_two,
+        shap_data=train_shap_df_two,
         shap_data_ood=train_shap_df_ood_two,
+        target_shift=train_one_target_shift_df,
+        target_shift_ood=train_one_target_shift_df_ood,
         performance_ood=tpr_tr_two - tpr_ood_two,
         target=tpr_tr_two - tpr_two,
         state=state,
