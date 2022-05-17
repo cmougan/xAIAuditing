@@ -48,8 +48,8 @@ random.seed(0)
 # Load data
 data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
 ca_data = data_source.get_data(states=["CA"], download=True)
-data_source = ACSDataSource(survey_year="2016", horizon="1-Year", survey="person")
-mi_data = data_source.get_data(states=["MI"], download=True)
+data_source = ACSDataSource(survey_year="2015", horizon="1-Year", survey="person")
+mi_data = data_source.get_data(states=["CA"], download=True)
 
 states = [
     "TN",
@@ -145,7 +145,7 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 2_000
+ITERS = 10_000
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
@@ -187,7 +187,7 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     row_shap_two = []
 
     # Sampling
-    aux = mi_full.sample(n=SAMPLE_FRAC*2, replace=True)
+    aux = mi_full.sample(n=SAMPLE_FRAC*100, replace=True)
 
     # Performance calculation
     preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
