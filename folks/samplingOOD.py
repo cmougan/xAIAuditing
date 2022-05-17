@@ -277,8 +277,10 @@ for state in tqdm(states, desc="States", position=0):
     estimators["XGBoost"] = XGBRegressor(
         verbosity=0, verbose=0, silent=True, random_state=0
     )
-    estimators["SVM"] = SVR()
-    estimators["MLP"] = MLPRegressor(random_state=0)
+    estimators["SVM"] = Pipeline([("scaler", StandardScaler()), ("model", SVR(C=0.01))])
+    estimators["MLP"] = Pipeline(
+        [("scaler", StandardScaler()), ("model", MLPRegressor(random_state=0))]
+    )
 
     ## Loop over different G estimators
     # Some target transformations
