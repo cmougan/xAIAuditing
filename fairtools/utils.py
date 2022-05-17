@@ -373,7 +373,7 @@ def loop_estimators_fairness(
             ),
             np.nan_to_num(performance_ood),
         )
-        res.append([state, error_type, estimator, "Only Target", error_te, error_ood])
+        res.append([state, error_type, estimator, "Data+Target", error_te, error_ood])
         ### SHAP + DATA
         X_train, X_test, y_train, y_test = train_test_split(
             pd.concat([shap_data, normal_data, target_shift], axis=1),
