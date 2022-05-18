@@ -134,8 +134,8 @@ tpr_tr_two = black_tpr
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 1_000
-ITERS = 2_000
+SAMPLE_FRAC = 1_0
+ITERS = 2_0
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
@@ -183,8 +183,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     preds_black = model.predict_proba(black_tr.drop(columns=["target", "group"]))[:, 1]
 
     ## Fairness
-    white_tpr = np.mean(np.round(preds_white[white_tr.target == 1]))
-    black_tpr = np.mean(np.round(preds_black[white_tr.target == 1]))
+    white_tpr = np.mean(preds_white[white_tr.target == 1])
+    black_tpr = np.mean(preds_black[black_tr.target == 1])
     tpr_one[i] = white_tpr
     tpr_two[i] = black_tpr
 
@@ -265,7 +265,7 @@ for state in tqdm(states, desc="States", position=0):
     tx_full["target"] = tx_labels
 
     # Loop to create training data
-    for i in tqdm(range(0, int(ITERS / 20)), leave=False, desc="Bootstrap", position=1):
+    for i in tqdm(range(0, int(ITERS)), leave=False, desc="Bootstrap", position=1):
         row_ood_one = []
         row_ood_two = []
         row_shap_ood_one = []
@@ -283,8 +283,8 @@ for state in tqdm(states, desc="States", position=0):
             :, 1
         ]
         ## Fairness
-        white_tpr = np.mean(np.round(white_preds[white_ood.target == 1]))
-        black_tpr = np.mean(np.round(black_preds[black_ood.target == 1]))
+        white_tpr = np.mean(white_preds[white_ood.target == 1])
+        black_tpr = np.mean(black_preds[black_ood.target == 1])
         tpr_ood_one[i] = white_tpr
         tpr_ood_two[i] = black_tpr
 
