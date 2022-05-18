@@ -12,8 +12,7 @@ from folktables import (
 )
 import pandas as pd
 from collections import defaultdict
-from scipy.stats import kstest, wasserstein_distance
-import seaborn as sns
+from scipy.stats import wasserstein_distance
 import numpy as np
 import random
 import sys
@@ -21,11 +20,11 @@ import sys
 # Scikit-Learn
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.linear_model import LogisticRegression, Lasso, LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_auc_score, mean_squared_error, mean_absolute_error
+from sklearn.metrics import roc_auc_score
 from sklearn.dummy import DummyRegressor
 from sklearn.svm import SVR
 
@@ -39,7 +38,7 @@ from tqdm import tqdm
 import sys
 
 sys.path.append("../")
-from fairtools.utils import psi, loop_estimators, loop_estimators_fairness
+from fairtools.utils import loop_estimators_fairness
 
 # Seeding
 np.random.seed(0)
@@ -374,9 +373,6 @@ for state in tqdm(states, desc="States", position=0):
         verbosity=0, verbose=0, silent=True, random_state=0
     )
     estimators["SVM"] = Pipeline([("scaler", StandardScaler()), ("model", SVR(C=0.01))])
-    estimators["MLP"] = Pipeline(
-        [("scaler", StandardScaler()), ("model", MLPRegressor(random_state=0))]
-    )
 
     ## Loop over different G estimators
 
