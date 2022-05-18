@@ -151,7 +151,6 @@ train_one = defaultdict()
 train_two = defaultdict()
 train_ood_one = defaultdict()
 train_ood_two = defaultdict()
-performance_ood = defaultdict()
 train_shap_one = defaultdict()
 train_shap_two = defaultdict()
 train_shap_ood_one = defaultdict()
@@ -194,8 +193,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     preds_black = model.predict_proba(black_tr.drop(columns=["target", "group"]))[:, 1]
 
     ## Fairness
-    white_tpr = np.mean(preds_white[aux.target == 1])
-    black_tpr = np.mean(preds_black[aux.target == 1])
+    white_tpr = np.mean(preds_white[white_tr.target == 1])
+    black_tpr = np.mean(preds_black[white_tr.target == 1])
     tpr_one[i] = white_tpr
     tpr_two[i] = black_tpr
 
@@ -294,9 +293,6 @@ for state in tqdm(states, desc="States", position=0):
         black_preds = model.predict_proba(black_ood.drop(columns=["target", "group"]))[
             :, 1
         ]
-        performance_ood[i] = train_error - roc_auc_score(
-            aux_ood.target.values, preds_ood
-        )
         ## Fairness
         white_tpr = np.mean(white_pred[white_ood.target == 1])
         black_tpr = np.mean(black_pred[black_ood.target == 1])
