@@ -120,15 +120,17 @@ mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 model = XGBClassifier(verbosity=0, silent=True, use_label_encoder=False, njobs=1)
 
 # Train on CA data
-preds_ca = cross_val_predict(
-    model, ca_features, ca_labels, cv=3, method="predict_proba"
-)[:, 1]
 model.fit(ca_features, ca_labels)
+preds_ca = model.predict(ca_features)
 # Test on MI data
 preds_mi = model.predict_proba(mi_features)[:, 1]
 
-# print("Test MI EO", white_tpr - black_tpr)
-
+# Results in training data
+white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
+black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
+eof_tr = white_tpr - black_tpr
+tpr_tr_one = white_tpr
+tpr_tr_two = black_tpr
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############

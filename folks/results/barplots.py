@@ -14,7 +14,7 @@ rcParams["figure.figsize"] = 16, 8
 rcParams.update({"font.size": 22})
 
 # %%
-df = pd.read_csv("folks/results/all_results_xx.csv")
+df = pd.read_csv("folks/results/all_results_income.csv")
 
 df.data = df.data.replace("Only Data", "Distribution Shift")
 df.data = df.data.replace("Data+Target", "Dist+Pred Shift")
