@@ -144,7 +144,7 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 1_000
+SAMPLE_FRAC = 4_000
 ITERS = 10_000
 # Init
 train_one = defaultdict()
@@ -187,7 +187,7 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     row_shap_two = []
 
     # Sampling
-    aux = mi_full.sample(n=SAMPLE_FRAC * 2, replace=True)
+    aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
 
     # Performance calculation
     preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
@@ -279,7 +279,7 @@ for state in tqdm(states, desc="States", position=0):
     tx_full["target"] = tx_labels
 
     # Loop to create training data
-    for i in tqdm(range(0, int(ITERS / 10)), leave=False, desc="Bootstrap", position=1):
+    for i in tqdm(range(0, int(ITERS / 20)), leave=False, desc="Bootstrap", position=1):
         row_ood_one = []
         row_ood_two = []
         row_shap_ood_one = []

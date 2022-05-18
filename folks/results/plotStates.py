@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from pyparsing import col
 
-df = pd.read_csv("folks/results/all_results_income.csv")
+df = pd.read_csv("folks/results/all_results_xx.csv")
 # %%
 aux = df[df["error_type"] == "performance"]
 aux = aux[aux["estimator"] == "Linear"]
