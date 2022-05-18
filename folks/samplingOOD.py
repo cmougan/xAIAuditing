@@ -181,7 +181,7 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
         row.append(ks)
         row_shap.append(sh)
     # Target shift
-    ks_target_shift = wasserstein_distance(preds_ca, aux["target"])
+    ks_target_shift = wasserstein_distance(preds_ca, preds)
     row_target_shift.append(ks_target_shift)
     # Save test
 
@@ -250,7 +250,7 @@ for state in tqdm(states, desc="States", position=0):
             row_shap_ood.append(sh_ood)
 
         # Target shift
-        ks_target_shift_ood = wasserstein_distance(preds_ca, aux_ood["target"])
+        ks_target_shift_ood = wasserstein_distance(preds_ca,preds_ood)
         row_target_shift_ood = ks_target_shift_ood
         # Save OOD
         train_shap_ood[i] = row_shap_ood

@@ -144,8 +144,8 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 1_000
-ITERS = 2_000
+SAMPLE_FRAC = 1_0
+ITERS = 2_0
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
@@ -223,8 +223,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
         row_shap_one.append(sh_one)
         row_shap_two.append(sh_two)
     # Target shift
-    ks_one_target = wasserstein_distance(preds_ca[ca_group == 1], white_tr["target"])
-    ks_two_target = wasserstein_distance(preds_ca[ca_group == 2], black_tr["target"])
+    ks_one_target = wasserstein_distance(preds_ca[ca_group == 1], preds_white)
+    ks_two_target = wasserstein_distance(preds_ca[ca_group == 2], preds_black)
 
     train_one_target_shift[i] = ks_one_target
     train_two_target_shift[i] = ks_two_target
@@ -294,8 +294,8 @@ for state in tqdm(states, desc="States", position=0):
             :, 1
         ]
         ## Fairness
-        white_tpr = np.mean(white_pred[white_ood.target == 1])
-        black_tpr = np.mean(black_pred[black_ood.target == 1])
+        white_tpr = np.mean(white_preds[white_ood.target == 1])
+        black_tpr = np.mean(black_preds[black_ood.target == 1])
         tpr_ood_one[i] = white_tpr
         tpr_ood_two[i] = black_tpr
 
@@ -332,10 +332,10 @@ for state in tqdm(states, desc="States", position=0):
             row_shap_ood_two.append(sh_ood_two)
         # Target shift
         ks_one_target = wasserstein_distance(
-            preds_ca[ca_group == 1], aux[aux["group"] == 1]["target"]
+            preds_ca[ca_group == 1], white_preds
         )
         ks_two_target = wasserstein_distance(
-            preds_ca[ca_group == 2], aux[aux["group"] == 2]["target"]
+            preds_ca[ca_group == 2], black_preds
         )
 
         train_one_target_shift_ood[i] = ks_one_target
