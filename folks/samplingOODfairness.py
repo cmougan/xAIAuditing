@@ -128,17 +128,6 @@ model.fit(ca_features, ca_labels)
 # Test on MI data
 preds_mi = model.predict_proba(mi_features)[:, 1]
 
-
-##Fairness
-white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
-black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
-eof_tr = white_tpr - black_tpr
-tpr_tr_one = white_tpr
-tpr_tr_two = black_tpr
-# print("Train EO", eof_tr)
-
-white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
-black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 # print("Test MI EO", white_tpr - black_tpr)
 
 ## Can we learn to solve this issue?
@@ -193,8 +182,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     preds_black = model.predict_proba(black_tr.drop(columns=["target", "group"]))[:, 1]
 
     ## Fairness
-    white_tpr = np.mean(preds_white[white_tr.target == 1])
-    black_tpr = np.mean(preds_black[white_tr.target == 1])
+    white_tpr = np.mean(np.round(preds_white[white_tr.target == 1]))
+    black_tpr = np.mean(np.round(preds_black[white_tr.target == 1]))
     tpr_one[i] = white_tpr
     tpr_two[i] = black_tpr
 
@@ -284,7 +273,6 @@ for state in tqdm(states, desc="States", position=0):
         # Sampling
         white_ood = tx_full[tx_full["group"] == 1].sample(n=SAMPLE_FRAC, replace=True)
         black_ood = tx_full[tx_full["group"] == 2].sample(n=SAMPLE_FRAC, replace=True)
-        # aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
 
         # OOD performance calculation
         white_preds = model.predict_proba(white_ood.drop(columns=["target", "group"]))[
@@ -294,8 +282,8 @@ for state in tqdm(states, desc="States", position=0):
             :, 1
         ]
         ## Fairness
-        white_tpr = np.mean(white_preds[white_ood.target == 1])
-        black_tpr = np.mean(black_preds[black_ood.target == 1])
+        white_tpr = np.mean(np.round(white_preds[white_ood.target == 1]))
+        black_tpr = np.mean(np.round(black_preds[black_ood.target == 1]))
         tpr_ood_one[i] = white_tpr
         tpr_ood_two[i] = black_tpr
 
