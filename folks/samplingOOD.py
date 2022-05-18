@@ -129,7 +129,7 @@ model.fit(ca_features, ca_labels)
 # Test on MI data
 preds_mi = model.predict_proba(mi_features)[:, 1]
 
-
+# %%
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
@@ -221,7 +221,7 @@ for state in tqdm(states, desc="States", position=0):
 
     # Loop to create training data
     for i in tqdm(
-        range(0, int(ITERS / 100)), leave=False, desc="Bootstrap", position=1
+        range(0, int(ITERS)), leave=False, desc="Bootstrap", position=1
     ):
         row_ood = []
         row_shap_ood = []
