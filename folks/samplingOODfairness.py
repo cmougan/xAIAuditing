@@ -202,19 +202,18 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
 
     # Shap values calculation
     shap_values_white = explainer(white_tr.drop(columns=["target", "group"]))
-    shap_values_white = pd.DataFrame(shap_values_white.values, columns=ca_features.columns)
+    shap_values_white = pd.DataFrame(
+        shap_values_white.values, columns=ca_features.columns
+    )
     shap_values_black = explainer(black_tr.drop(columns=["target", "group"]))
-    shap_values_black = pd.DataFrame(shap_values_black.values, columns=ca_features.columns)
-
+    shap_values_black = pd.DataFrame(
+        shap_values_black.values, columns=ca_features.columns
+    )
 
     for feat in ca_features.columns:
         # Michigan
-        ks_one = wasserstein_distance(
-            ca_features[ca_group == 1][feat],white_tr[feat]
-        )
-        ks_two = wasserstein_distance(
-            ca_features[ca_group == 2][feat], black_tr[feat]
-        )
+        ks_one = wasserstein_distance(ca_features[ca_group == 1][feat], white_tr[feat])
+        ks_two = wasserstein_distance(ca_features[ca_group == 2][feat], black_tr[feat])
         sh_one = wasserstein_distance(
             shap_test[ca_group == 1][feat], shap_values_white[feat]
         )
@@ -226,12 +225,8 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
         row_shap_one.append(sh_one)
         row_shap_two.append(sh_two)
     # Target shift
-    ks_one_target = wasserstein_distance(
-        preds_ca[ca_group == 1], white_tr["target"]
-    )
-    ks_two_target = wasserstein_distance(
-        preds_ca[ca_group == 2], black_tr["target"]
-    )
+    ks_one_target = wasserstein_distance(preds_ca[ca_group == 1], white_tr["target"])
+    ks_two_target = wasserstein_distance(preds_ca[ca_group == 2], black_tr["target"])
 
     train_one_target_shift[i] = ks_one_target
     train_two_target_shift[i] = ks_two_target
@@ -291,11 +286,15 @@ for state in tqdm(states, desc="States", position=0):
         # Sampling
         white_ood = tx_full[tx_full["group"] == 1].sample(n=SAMPLE_FRAC, replace=True)
         black_ood = tx_full[tx_full["group"] == 2].sample(n=SAMPLE_FRAC, replace=True)
-        #aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
+        # aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
 
         # OOD performance calculation
-        white_preds = model.predict_proba(white_ood.drop(columns=["target", "group"]))[:, 1]
-        black_preds = model.predict_proba(black_ood.drop(columns=["target", "group"]))[:, 1]
+        white_preds = model.predict_proba(white_ood.drop(columns=["target", "group"]))[
+            :, 1
+        ]
+        black_preds = model.predict_proba(black_ood.drop(columns=["target", "group"]))[
+            :, 1
+        ]
         performance_ood[i] = train_error - roc_auc_score(
             aux_ood.target.values, preds_ood
         )

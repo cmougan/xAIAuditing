@@ -27,18 +27,18 @@ df = df[
     (df["estimator"] == "Linear")
     | (df["estimator"] == "Dummy")
     | (df["estimator"] == "RandomForest")
-    #| (df["estimator"] == "SVM")
+    # | (df["estimator"] == "SVM")
     | (df["estimator"] == "XGBoost")
 ]
 # %%
-for error in ['performance','fairness_one','fairness_two']:
-    aux = df[df['error_type']==error]
+for error in ["performance", "fairness_one", "fairness_two"]:
+    aux = df[df["error_type"] == error]
 # %%
-for error in ['performance','fairness_one','fairness_two']:
+for error in ["performance", "fairness_one", "fairness_two"]:
 
     aux = (
         pd.pivot_table(
-            df[df['error_type']==error],
+            df[df["error_type"] == error],
             index=[
                 "estimator",
                 "data",
@@ -50,7 +50,9 @@ for error in ['performance','fairness_one','fairness_two']:
     )
     aux = aux.reset_index()
 
-    aux = pd.DataFrame(aux.values, columns=["Estimator", "Data", "Mean", "Std", "Median"])
+    aux = pd.DataFrame(
+        aux.values, columns=["Estimator", "Data", "Mean", "Std", "Median"]
+    )
     aux = aux.drop(columns=["Std", "Median"])
     base = aux[aux.Estimator == "Dummy"].Mean.mean()
     aux = aux[aux.Estimator != "Dummy"]
@@ -62,7 +64,7 @@ for error in ['performance','fairness_one','fairness_two']:
     plt.axhline(base, color="black", linestyle="--", label="Baseline")
     plt.ylabel("Error on quantification of model performance")
     plt.legend()
-    plt.savefig('images/'+error+'.png')
+    plt.savefig("images/" + error + ".png")
     plt.show()
 # %%
 
