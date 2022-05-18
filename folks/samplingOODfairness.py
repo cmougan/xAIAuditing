@@ -144,8 +144,8 @@ black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 4_000
-ITERS = 10_000
+SAMPLE_FRAC = 1_000
+ITERS = 2_000
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
@@ -187,35 +187,39 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     row_shap_two = []
 
     # Sampling
-    aux = mi_full.sample(n=SAMPLE_FRAC, replace=True)
+    white_tr = mi_full[mi_full["group"] == 1].sample(n=SAMPLE_FRAC, replace=True)
+    black_tr = mi_full[mi_full["group"] == 2].sample(n=SAMPLE_FRAC, replace=True)
 
     # Performance calculation
-    preds = model.predict_proba(aux.drop(columns=["target", "group"]))[:, 1]
+    preds_white = model.predict_proba(white_tr.drop(columns=["target", "group"]))[:, 1]
+    preds_black = model.predict_proba(black_tr.drop(columns=["target", "group"]))[:, 1]
     performance[i] = train_error - roc_auc_score(aux.target, preds)
     ## Fairness
-    white_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 1)])
-    black_tpr = np.mean(preds[(aux.target == 1) & (aux.group == 2)])
+    white_tpr = np.mean(preds_white[aux.target == 1])
+    black_tpr = np.mean(preds_black[aux.target == 1])
     tpr_one[i] = white_tpr
     tpr_two[i] = black_tpr
 
     # Shap values calculation
-    shap_values = explainer(aux.drop(columns=["target", "group"]))
-    shap_values = pd.DataFrame(shap_values.values, columns=ca_features.columns)
-    shap_values["group"] = aux.group.values
+    shap_values_white = explainer(white_tr.drop(columns=["target", "group"]))
+    shap_values_white = pd.DataFrame(shap_values_white.values, columns=ca_features.columns)
+    shap_values_black = explainer(black_tr.drop(columns=["target", "group"]))
+    shap_values_black = pd.DataFrame(shap_values_black.values, columns=ca_features.columns)
+
 
     for feat in ca_features.columns:
         # Michigan
         ks_one = wasserstein_distance(
-            ca_features[ca_group == 1][feat], aux[aux["group"] == 1][feat]
+            ca_features[ca_group == 1][feat],white_tr[feat]
         )
         ks_two = wasserstein_distance(
-            ca_features[ca_group == 2][feat], aux[aux["group"] == 2][feat]
+            ca_features[ca_group == 2][feat], black_tr[feat]
         )
         sh_one = wasserstein_distance(
-            shap_test[ca_group == 1][feat], shap_values[shap_values["group"] == 1][feat]
+            shap_test[ca_group == 1][feat], shap_values_white[feat]
         )
         sh_two = wasserstein_distance(
-            shap_test[ca_group == 2][feat], shap_values[shap_values["group"] == 2][feat]
+            shap_test[ca_group == 2][feat], shap_values_black[feat]
         )
         row_one.append(ks_one)
         row_two.append(ks_two)
@@ -223,10 +227,10 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
         row_shap_two.append(sh_two)
     # Target shift
     ks_one_target = wasserstein_distance(
-        ca_labels[ca_group == 1], aux[aux["group"] == 1]["target"]
+        preds_ca[ca_group == 1], white_tr["target"]
     )
     ks_two_target = wasserstein_distance(
-        ca_labels[ca_group == 2], aux[aux["group"] == 2]["target"]
+        preds_ca[ca_group == 2], black_tr["target"]
     )
 
     train_one_target_shift[i] = ks_one_target
@@ -237,7 +241,6 @@ for i in tqdm(range(0, ITERS), leave=False, desc="Test Bootstrap", position=1):
     train_one[i] = row_one
     train_shap_two[i] = row_shap_two
     train_two[i] = row_two
-
 
 # Some transformations
 ## Train (previous test)
@@ -286,42 +289,47 @@ for state in tqdm(states, desc="States", position=0):
         row_shap_ood_two = []
 
         # Sampling
-        aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
+        white_ood = tx_full[tx_full["group"] == 1].sample(n=SAMPLE_FRAC, replace=True)
+        black_ood = tx_full[tx_full["group"] == 2].sample(n=SAMPLE_FRAC, replace=True)
+        #aux_ood = tx_full.sample(n=SAMPLE_FRAC, replace=True)
 
         # OOD performance calculation
-        preds_ood = model.predict_proba(aux_ood.drop(columns=["target", "group"]))[:, 1]
+        white_preds = model.predict_proba(white_ood.drop(columns=["target", "group"]))[:, 1]
+        black_preds = model.predict_proba(black_ood.drop(columns=["target", "group"]))[:, 1]
         performance_ood[i] = train_error - roc_auc_score(
             aux_ood.target.values, preds_ood
         )
         ## Fairness
-        white_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 1)])
-        black_tpr = np.mean(preds_ood[(aux_ood.target == 1) & (aux_ood.group == 2)])
+        white_tpr = np.mean(white_pred[white_ood.target == 1])
+        black_tpr = np.mean(black_pred[black_ood.target == 1])
         tpr_ood_one[i] = white_tpr
         tpr_ood_two[i] = black_tpr
 
         # Shap values calculation OOD
-        shap_values_ood = explainer(aux_ood.drop(columns=["target", "group"]))
-        shap_values_ood = pd.DataFrame(
-            shap_values_ood.values, columns=ca_features.columns
+        shap_values_ood_white = explainer(white_ood.drop(columns=["target", "group"]))
+        shap_values_ood_white = pd.DataFrame(
+            shap_values_ood_white.values, columns=ca_features.columns
         )
-        shap_values_ood["group"] = aux_ood.group.values
+        shap_values_ood_black = explainer(black_ood.drop(columns=["target", "group"]))
+        shap_values_ood_black = pd.DataFrame(
+            shap_values_ood_black.values, columns=ca_features.columns
+        )
 
         for feat in ca_features.columns:
             # OOD
             ks_ood_one = wasserstein_distance(
-                ca_features[ca_group == 1][feat], aux_ood[aux_ood["group"] == 1][feat]
+                ca_features[ca_group == 1][feat], white_ood[feat]
             )
             ks_ood_two = wasserstein_distance(
-                ca_features[ca_group == 2][feat], aux_ood[aux_ood["group"] == 2][feat]
+                ca_features[ca_group == 2][feat], black_ood[feat]
             )
-
             sh_ood_one = wasserstein_distance(
                 shap_test[ca_group == 1][feat],
-                shap_values_ood[shap_values_ood["group"] == 1][feat],
+                shap_values_ood_white[feat],
             )
             sh_ood_two = wasserstein_distance(
                 shap_test[ca_group == 2][feat],
-                shap_values_ood[shap_values_ood["group"] == 2][feat],
+                shap_values_ood_black[feat],
             )
 
             row_ood_one.append(ks_ood_one)
@@ -330,10 +338,10 @@ for state in tqdm(states, desc="States", position=0):
             row_shap_ood_two.append(sh_ood_two)
         # Target shift
         ks_one_target = wasserstein_distance(
-            ca_labels[ca_group == 1], aux[aux["group"] == 1]["target"]
+            preds_ca[ca_group == 1], aux[aux["group"] == 1]["target"]
         )
         ks_two_target = wasserstein_distance(
-            ca_labels[ca_group == 2], aux[aux["group"] == 2]["target"]
+            preds_ca[ca_group == 2], aux[aux["group"] == 2]["target"]
         )
 
         train_one_target_shift_ood[i] = ks_one_target
