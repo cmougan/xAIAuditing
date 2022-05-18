@@ -250,7 +250,7 @@ for state in tqdm(states, desc="States", position=0):
             row_shap_ood.append(sh_ood)
 
         # Target shift
-        ks_target_shift_ood = wasserstein_distance(preds_ca,preds_ood)
+        ks_target_shift_ood = wasserstein_distance(preds_ca, preds_ood)
         row_target_shift_ood = ks_target_shift_ood
         # Save OOD
         train_shap_ood[i] = row_shap_ood

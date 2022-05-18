@@ -331,12 +331,8 @@ for state in tqdm(states, desc="States", position=0):
             row_shap_ood_one.append(sh_ood_one)
             row_shap_ood_two.append(sh_ood_two)
         # Target shift
-        ks_one_target = wasserstein_distance(
-            preds_ca[ca_group == 1], white_preds
-        )
-        ks_two_target = wasserstein_distance(
-            preds_ca[ca_group == 2], black_preds
-        )
+        ks_one_target = wasserstein_distance(preds_ca[ca_group == 1], white_preds)
+        ks_two_target = wasserstein_distance(preds_ca[ca_group == 2], black_preds)
 
         train_one_target_shift_ood[i] = ks_one_target
         train_two_target_shift_ood[i] = ks_two_target
