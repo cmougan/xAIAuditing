@@ -24,9 +24,9 @@ df.data = df.data.replace("Only Shap", " Explanation Shift")
 df.data = df.data.replace("Data+Target+Shap", " Dist+Pred+Exp Shift")
 
 
-#df = df[df["error_type"] == "fairness_two"]
-#df = df[df["error_type"] == "fairness_one"]
-df = df[df["error_type"] == "performance"]
+df = df[df["error_type"] == "fairness_two"]
+# df = df[df["error_type"] == "fairness_one"]
+# df = df[df["error_type"] == "performance"]
 df = df.drop(columns="error_te")
 # df = df[df['state']=='WA']
 df = df[
