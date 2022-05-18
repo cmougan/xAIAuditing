@@ -134,7 +134,7 @@ preds_mi = model.predict_proba(mi_features)[:, 1]
 ################################
 ####### PARAMETERS #############
 SAMPLE_FRAC = 1_000
-ITERS = 10_000
+ITERS = 2000
 # Init
 train = defaultdict()
 train_target_shift = defaultdict()
