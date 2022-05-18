@@ -134,8 +134,8 @@ tpr_tr_two = black_tpr
 ## Can we learn to solve this issue?
 ################################
 ####### PARAMETERS #############
-SAMPLE_FRAC = 1_0
-ITERS = 2_0
+SAMPLE_FRAC = 1_000
+ITERS = 2_000
 # Init
 train_one = defaultdict()
 train_two = defaultdict()
