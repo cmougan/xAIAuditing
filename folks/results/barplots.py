@@ -69,3 +69,12 @@ for error in ["performance", "fairness_one", "fairness_two"]:
 # %%
 
 # %%
+pd.pivot_table(
+            df[df["error_type"] == 'fairness_one'],
+            index=[
+                "estimator",
+                "data",
+            ],
+            aggfunc=[np.mean, np.std, np.median],
+        ).sort_values(by=["estimator", "data"], ascending=True).round(decimals=6).style.highlight_min()
+# %%
