@@ -111,12 +111,12 @@ states = [
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
 
 
-ca_features, ca_labels, ca_group = ACSEmployment.df_to_numpy(ca_data)
-mi_features, mi_labels, mi_group = ACSEmployment.df_to_numpy(mi_data)
+ca_features, ca_labels, ca_group = ACSMobility.df_to_numpy(ca_data)
+mi_features, mi_labels, mi_group = ACSMobility.df_to_numpy(mi_data)
 
 ## Conver to DF
-ca_features = pd.DataFrame(ca_features, columns=ACSEmployment.features)
-mi_features = pd.DataFrame(mi_features, columns=ACSEmployment.features)
+ca_features = pd.DataFrame(ca_features, columns=ACSMobility.features)
+mi_features = pd.DataFrame(mi_features, columns=ACSMobility.features)
 
 # Modeling
 model = XGBClassifier(verbosity=0, silent=True, use_label_encoder=False, njobs=1)
@@ -211,8 +211,8 @@ for state in tqdm(states, desc="States", position=0):
 
     # Load and process data
     tx_data = data_source.get_data(states=["HI"], download=True)
-    tx_features, tx_labels, tx_group = ACSEmployment.df_to_numpy(tx_data)
-    tx_features = pd.DataFrame(tx_features, columns=ACSEmployment.features)
+    tx_features, tx_labels, tx_group = ACSMobility.df_to_numpy(tx_data)
+    tx_features = pd.DataFrame(tx_features, columns=ACSMobility.features)
 
     # Lets add the target to ease the sampling
     tx_full = tx_features.copy()
