@@ -59,7 +59,7 @@ for error in ["performance", "fairness_one", "fairness_two"]:
     aux = aux.sort_values(by="Data", ascending=False)
 
     plt.figure()
-    plt.title(error)
+    #plt.title(error)
     sns.barplot(x="Estimator", y="Mean", hue="Data", data=aux)
     plt.axhline(base, color="black", linestyle="--", label="Baseline")
     plt.ylabel("Error on quantification of model performance")
