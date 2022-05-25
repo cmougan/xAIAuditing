@@ -265,7 +265,7 @@ for state in tqdm(states, desc="States", position=0):
     tx_full["target"] = tx_labels
 
     # Loop to create training data
-    for i in tqdm(range(0, int(ITERS/20)), leave=False, desc="Bootstrap", position=1):
+    for i in tqdm(range(0, int(ITERS / 20)), leave=False, desc="Bootstrap", position=1):
         row_ood_one = []
         row_ood_two = []
         row_shap_ood_one = []
