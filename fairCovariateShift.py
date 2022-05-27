@@ -14,6 +14,7 @@ import seaborn as sns
 # %%
 N = 10_000
 gamma = 0
+unf = 0.2
 x11 = np.random.normal(0, 1, size=N)
 x12 = np.random.normal(0, 1, size=N)
 y1 = np.where(x11 + x12 + np.random.normal(0, 2) > 0, 1, 0)
@@ -21,7 +22,7 @@ a1 = np.repeat(-1, N)
 x21 = np.random.normal(gamma, 1, size=N)
 x22 = np.random.normal(gamma, 1, size=N)
 a2 = np.repeat(1, N)
-y2 = np.where(x21 + x22 + np.random.normal(0, 0.2) > 0, 1, 0)
+y2 = np.where(x21 + x22 + np.random.normal(unf, 0.2)  > 0, 1, 0)
 # %%
 X1 = np.concatenate((x11, x21), axis=0)
 X2 = np.concatenate((x12, x22), axis=0)
@@ -46,8 +47,8 @@ att_te = X_te["var1"].values
 X_tr = X_tr.drop(columns=["var1"])
 X_te = X_te.drop(columns=["var1"])
 # %%
-# model = XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.1, verbosity=0,use_label_encoder=False)
-model = LogisticRegression()
+model = XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.1, verbosity=0,use_label_encoder=False)
+#model = LogisticRegression()
 model.fit(X_tr.values, y_tr.values)
 preds_tr = model.predict(X_tr.values)
 preds_te = model.predict(X_te.values)
