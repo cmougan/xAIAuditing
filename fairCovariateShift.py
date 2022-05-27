@@ -11,42 +11,42 @@ from fairtools.detector import shap_detector
 import seaborn as sns
 
 # %%
-N = 5000
+N = 10_000
 gamma = 0
-x11 = np.random.normal(0,1,size=N)
-x12 = np.random.normal(0,1,size=N)
-y1 = np.where(x11 +x12+np.random.normal(0,2)>0,1,0)
-a1 = np.repeat(-1,N)
-x21 = np.random.normal(gamma,1,size=N)
-x22 = np.random.normal(gamma,1,size=N)
-a2 = np.repeat(1,N)
-y2 = np.where(x21 +x22 + np.random.normal(0,0.2)>0,1,0)
+x11 = np.random.normal(0, 1, size=N)
+x12 = np.random.normal(0, 1, size=N)
+y1 = np.where(x11 + x12 + np.random.normal(0, 2) > 0, 1, 0)
+a1 = np.repeat(-1, N)
+x21 = np.random.normal(gamma, 1, size=N)
+x22 = np.random.normal(gamma, 1, size=N)
+a2 = np.repeat(1, N)
+y2 = np.where(x21 + x22 + np.random.normal(0, 0.2) > 0, 1, 0)
 # %%
-X1 = np.concatenate((x11,x21),axis=0)
-X2 = np.concatenate((x12,x22),axis=0)
-A = np.concatenate((a1,a2),axis=0)
-y = np.concatenate((y1,y2),axis=0)
-# %%
-X = pd.DataFrame([A,X1,X2]).T
+X1 = np.concatenate((x11, x21), axis=0)
+X2 = np.concatenate((x12, x22), axis=0)
+A = np.concatenate((a1, a2), axis=0)
+y = np.concatenate((y1, y2), axis=0)
+# %%
+X = pd.DataFrame([A, X1, X2]).T
 X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
-X['target'] = y
+X["target"] = y
 # %%
-X = X.sample(frac=1,replace=False)
+X = X.sample(frac=1, replace=False)
 # %%
 X_tr, X_te, y_tr, y_te = train_test_split(
-        X.drop(columns = ["target"]),
-        X.target,
-        test_size=0.33,
-        random_state=42,
-    )
+    X.drop(columns=["target"]),
+    X.target,
+    test_size=0.33,
+    random_state=42,
+)
 # %%
-att_tr = X_tr['var1'].values
-att_te = X_te['var1'].values
-X_tr = X_tr.drop(columns = ["var1"])
-X_te = X_te.drop(columns = ["var1"])
+att_tr = X_tr["var1"].values
+att_te = X_te["var1"].values
+X_tr = X_tr.drop(columns=["var1"])
+X_te = X_te.drop(columns=["var1"])
 # %%
-model = XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.1, verbosity=0,use_label_encoder=False)
-#model = LogisticRegression()
+# model = XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.1, verbosity=0,use_label_encoder=False)
+model = LogisticRegression()
 model.fit(X_tr.values, y_tr.values)
 preds_tr = model.predict(X_tr.values)
 preds_te = model.predict(X_te.values)
