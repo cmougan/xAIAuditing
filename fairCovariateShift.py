@@ -5,6 +5,7 @@ from synthetic.fair_domain_adaptation_utils import gen_synth_shift_data, random_
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
+from sklearn.ensemble import RandomForestClassifier
 import shap
 from sklearn.model_selection import train_test_split
 from fairtools.detector import shap_detector
