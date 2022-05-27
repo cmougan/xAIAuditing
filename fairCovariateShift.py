@@ -8,59 +8,69 @@ from xgboost import XGBClassifier
 import shap
 from sklearn.model_selection import train_test_split
 from fairtools.detector import shap_detector
+import seaborn as sns
 
 # %%
-data_src, data_tar, sensible_feature, non_separating_feature = gen_synth_shift_data(
-    gamma_shift_src=0,
-    gamma_shift_tar=0,
-    gamma_A=0.0,
-    C_src=0,
-    C_tar=0,
-    N=1000,
-    verbose=False,
-)
+N = 5000
+gamma = 0
+x11 = np.random.normal(0,1,size=N)
+x12 = np.random.normal(0,1,size=N)
+y1 = np.where(x11 +x12+np.random.normal(0,2)>0,1,0)
+a1 = np.repeat(-1,N)
+x21 = np.random.normal(gamma,1,size=N)
+x22 = np.random.normal(gamma,1,size=N)
+a2 = np.repeat(1,N)
+y2 = np.where(x21 +x22 + np.random.normal(0,0.2)>0,1,0)
 # %%
-X_tr = pd.DataFrame(data_src[0][1])
-y_tr = data_src[0][2]
-X_te = pd.DataFrame(data_tar[0][1])
-y_te = data_tar[0][2]
-# Convert to DF
-X_tr.columns = ["var%d" % (i + 1) for i in range(X_tr.shape[1])]
-X_te.columns = ["var%d" % (i + 1) for i in range(X_te.shape[1])]
-# Drop the protected attribute
-att_tr = X_tr[["var1"]]
-att_te = X_te[["var1"]]
-# X_tr = X_tr.drop(columns='var1')
-# X_te = X_te.drop(columns='var1')
+X1 = np.concatenate((x11,x21),axis=0)
+X2 = np.concatenate((x12,x22),axis=0)
+A = np.concatenate((a1,a2),axis=0)
+y = np.concatenate((y1,y2),axis=0)
+# %%
+X = pd.DataFrame([A,X1,X2]).T
+X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
+X['target'] = y
 # %%
-X_tr["var1"] = np.random.choice([-1, 1], 1000)
+X = X.sample(frac=1,replace=False)
 # %%
-model = XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.1, verbosity=0)
-model.fit(X_tr, y_tr)
-preds_tr = model.predict(X_tr)
-preds_te = model.predict(X_te)
+X_tr, X_te, y_tr, y_te = train_test_split(
+        X.drop(columns = ["target"]),
+        X.target,
+        test_size=0.33,
+        random_state=42,
+    )
 # %%
-print("AUC Train:", roc_auc_score(y_tr, model.predict_proba(X_tr)[:, 1]))
-print("AUC Test:", roc_auc_score(y_te, model.predict_proba(X_te)[:, 1]))
+att_tr = X_tr['var1'].values
+att_te = X_te['var1'].values
+X_tr = X_tr.drop(columns = ["var1"])
+X_te = X_te.drop(columns = ["var1"])
+# %%
+model = XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.1, verbosity=0,use_label_encoder=False)
+#model = LogisticRegression()
+model.fit(X_tr.values, y_tr.values)
+preds_tr = model.predict(X_tr.values)
+preds_te = model.predict(X_te.values)
+# %%
+print("AUC Train:", roc_auc_score(y_tr, model.predict_proba(X_tr.values)[:, 1]))
+print("AUC Test:", roc_auc_score(y_te, model.predict_proba(X_te.values)[:, 1]))
 
 # %%
-white_tpr = np.mean(preds_tr[(y_tr == 1) & (X_tr.var1 == -1)])
-black_tpr = np.mean(preds_tr[(y_tr == 1) & (X_tr.var1 == 1)])
-# white_tpr = np.mean(preds_tr[(y_tr == 1) & (att_tr.var1 == -1)])
-# black_tpr = np.mean(preds_tr[(y_tr == 1) & (att_tr.var1 == 1)])
+white_tpr = np.mean(preds_tr[(y_tr == 1) & (att_tr == -1)])
+black_tpr = np.mean(preds_tr[(y_tr == 1) & (att_tr == 1)])
 print("EOF Train: ", white_tpr - black_tpr)
-white_tpr = np.mean(preds_te[(y_te == 1) & (att_te.var1 == -1)])
-black_tpr = np.mean(preds_te[(y_te == 1) & (att_te.var1 == 1)])
+white_tpr = np.mean(preds_te[(y_te == 1) & (att_te == -1)])
+black_tpr = np.mean(preds_te[(y_te == 1) & (att_te == 1)])
 print("EOF Test: ", white_tpr - black_tpr)
 # %%
 explainer = shap.Explainer(model)
 ## Train Data
-shapX1 = explainer(X_tr[X_tr.var1 == 1]).values[:, 1:]
-shapX2 = explainer(X_tr[X_tr.var1 == -1]).values[:, 1:]
+shapX1 = explainer(X_tr[att_tr == 1]).values
+shapX2 = explainer(X_tr[att_tr == -1]).values
 print(shap_detector(data1=shapX1, data2=shapX2))
 ## Test data
-shapX1 = explainer(X_te[att_te.var1 == 1]).values[:, 1:]
-shapX2 = explainer(X_te[att_te.var1 == -1]).values[:, 1:]
+shapX1 = explainer(X_te[att_te == 1]).values
+shapX2 = explainer(X_te[att_te == -1]).values
 print(shap_detector(data1=shapX1, data2=shapX2))
+
 
 # %%
