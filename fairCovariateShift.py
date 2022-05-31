@@ -1,7 +1,6 @@
 # %%
 import pandas as pd
 import numpy as np
-from synthetic.fair_domain_adaptation_utils import gen_synth_shift_data, random_logit
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, r2_score
 from xgboost import XGBClassifier, XGBRegressor
