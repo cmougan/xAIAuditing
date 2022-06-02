@@ -19,7 +19,6 @@ plt.style.use("seaborn-whitegrid")
 N = 5_000
 res = []
 for gamma in np.linspace(0, 1, 10):
-
     x1 = np.random.normal(2, 1, size=N)
     x2 = np.random.normal(4, 1, size=N)
     A = np.random.choice([-1, 1], N)
@@ -113,6 +112,11 @@ for gamma in np.linspace(0, 1, 10):
     res.append([gamma, res1, res2, res3])
 
 # %%
-pd.DataFrame(res, columns=["gamma", "shap", "preds", "input_preds"]).plot(
-    x="gamma", y=["shap", "preds", "input_preds"]
-)
+plt.figure()
+pd.DataFrame(
+    res, columns=["gamma", "Explanation Space", "Output Space", "Input+Output Space"]
+).plot(x="gamma", y=["Explanation Space", "Output Space", "Input+Output Space"])
+plt.ylabel('AUC')
+plt.show()
+
+# %%
