@@ -18,6 +18,7 @@ plt.style.use("seaborn-whitegrid")
 # %%
 N = 5_000
 res = []
+linear_coefficients = defaultdict(list)
 for gamma in np.linspace(0, 1, 10):
     x1 = np.random.normal(2, 1, size=N)
     x2 = np.random.normal(4, 1, size=N)
@@ -71,13 +72,6 @@ for gamma in np.linspace(0, 1, 10):
     model.fit(X_tr.values, y_tr.values)
     preds_tr = model.predict(X_tr.values)
     preds_te = model.predict(X_te.values)
-    # preds_tr_ = model.predict_proba(X_tr.values)[:,1]
-    # preds_te_ = model.predict_proba(X_te.values)[:,1]
-
-    # print("AUC Train:", roc_auc_score(y_tr, model.predict_proba(X_tr.values)[:, 1]))
-    # print("AUC Test:", roc_auc_score(y_te, model.predict_proba(X_te.values)[:, 1]))
-    # print("AUC Train:", r2_score(y_tr, model.predict(X_tr.values)))
-    # print("AUC Test:", r2_score(y_te, model.predict(X_te.values)))
 
     white_tpr = np.mean(preds_tr[(y_tr == 1) & (att_tr == -1)])
     black_tpr = np.mean(preds_tr[(y_tr == 1) & (att_tr == 1)])
@@ -86,20 +80,25 @@ for gamma in np.linspace(0, 1, 10):
     black_tpr = np.mean(preds_te[(y_te == 1) & (att_te == 1)])
     # print("EOF Test: ", white_tpr - black_tpr)
 
+    # SHAP
     explainer = shap.Explainer(model)
-    ## Train Data
-    # shapX1 = explainer(X_tr[att_tr == 1]).values
-    # shapX2 = explainer(X_tr[att_tr == -1]).values
-    # print(shap_detector(data1=shapX1, data2=shapX2))
-    ## Test data
-    shapX1 = explainer(X_te[att_te == 1]).values
-    shapX2 = explainer(X_te[att_te == -1]).values
-    res1 = shap_detector(data1=shapX1, data2=shapX2)
+    shapX1 = explainer(X_tr).values
+    shapX1 = pd.DataFrame(shapX1)
+    shapX1.columns = ["var%d" % (i + 1) for i in range(shapX1.shape[1])]
+    shapX2 = explainer(X_te).values
+    shapX2 = pd.DataFrame(shapX2)
+    shapX2.columns = ["var%d" % (i + 1) for i in range(shapX2.shape[1])]
+    m = LogisticRegression()
+    m.fit(shapX1, att_tr_)
+    linear_coefficients[str(gamma) + "Shap"] = m.coef_
+    res1 = roc_auc_score(att_te, m.predict_proba(shapX2)[:, 1])
 
+    # Output
     m = LogisticRegression()
     m.fit(preds_tr.reshape(-1, 1), att_tr_)
     res2 = roc_auc_score(att_te, m.predict_proba(preds_te.reshape(-1, 1))[:, 1])
 
+    # Input + Output
     # Data Engineering
     aux_tr = X_tr.copy()
     aux_te = X_te.copy()
@@ -107,6 +106,7 @@ for gamma in np.linspace(0, 1, 10):
     aux_te["preds"] = preds_te
     m = LogisticRegression()
     m.fit(aux_tr, att_tr_)
+    linear_coefficients[str(gamma) + "InputOutput"] = m.coef_
     res3 = roc_auc_score(att_te, m.predict_proba(aux_te)[:, 1])
 
     res.append([gamma, res1, res2, res3])
@@ -116,7 +116,14 @@ plt.figure()
 pd.DataFrame(
     res, columns=["gamma", "Explanation Space", "Output Space", "Input+Output Space"]
 ).plot(x="gamma", y=["Explanation Space", "Output Space", "Input+Output Space"])
-plt.ylabel('AUC')
+plt.ylabel("AUC")
 plt.show()
 
+
 # %%
+plt.figure()
+sns.barplot(y=linear_coefficients["1.0Shap"][0], x=[1, 2, 3])
+plt.show()
+plt.figure()
+sns.barplot(y=linear_coefficients["1.0InputOutput"][0], x=[1, 2, 3, 4])
+plt.show()
