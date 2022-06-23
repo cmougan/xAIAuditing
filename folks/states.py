@@ -1,4 +1,5 @@
 # %%
+from cProfile import label
 from folktables import ACSDataSource, ACSIncome
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_predict
@@ -14,11 +15,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import train_test_split
 
-import sys
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-sys.path.append("../")
-from fairtools.xaiUtils import ShapEstimator
+sns.set_style("whitegrid")
+
 import random
 
 random.seed(0)
@@ -26,124 +29,82 @@ random.seed(0)
 # Load data
 data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
 ca_data = data_source.get_data(states=["CA"], download=True)
-mi_data = data_source.get_data(states=["MI"], download=True)
 ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
-mi_features, mi_labels, mi_group = ACSIncome.df_to_numpy(mi_data)
 ## Conver to DF
 ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
-mi_features = pd.DataFrame(mi_features, columns=ACSIncome.features)
 
+# %%
+splitter = int(ca_features.shape[0] / 2)
+ca_features_train = ca_features[:splitter]
+ca_features_test = ca_features[splitter:]
+ca_group_train = ca_group[:splitter]
+ca_group_test = ca_group[splitter:]
+ca_labels_train = ca_labels[:splitter]
+ca_labels_test = ca_labels[splitter:]
 # %%
 # Modeling
 model = XGBClassifier()
 
 # Train on CA data
-preds_ca = cross_val_predict(model, ca_features, ca_labels, cv=3)
+preds_ca_train = cross_val_predict(
+    model, ca_features_train, ca_labels_train, method="predict_proba", cv=3
+)[:, 1]
 model.fit(ca_features, ca_labels)
 
 # Test on MI data
-preds_mi = model.predict(mi_features)
+preds_ca_test = model.predict_proba(ca_features_test)[:, 1]
 
 # %%
 ##Fairness
-white_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 1)])
-black_tpr = np.mean(preds_ca[(ca_labels == 1) & (ca_group == 2)])
-print("Train EO", white_tpr - black_tpr)
+white_tpr = np.mean(preds_ca_train[(ca_labels_train == 1) & (ca_group_train == 1)])
+black_tpr = np.mean(preds_ca_train[(ca_labels_train == 1) & (ca_group_train == 2)])
+print("EOF", white_tpr - black_tpr)
 
-white_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 1)])
-black_tpr = np.mean(preds_mi[(mi_labels == 1) & (mi_group == 2)])
-print("Test EO", white_tpr - black_tpr)
-
-# %%
 ## Model performance
-print(roc_auc_score(preds_ca, ca_labels))
-print(roc_auc_score(preds_mi, mi_labels))
-
+print("AUC", roc_auc_score(ca_labels_train, preds_ca_train))
 # %%
-# Input KS
-for feat in ca_features.columns:
-    pval = kstest(ca_features[feat], mi_features[feat]).pvalue
-    if pval < 0.1:
-        print(feat, " is distinct ", pval)
-    else:
-        print(feat, " is equivalent ", pval)
-# %%
-# %%
-# Explainability
-explainer = shap.Explainer(model)
-shap_values = explainer(ca_features)
-ca_shap = pd.DataFrame(shap_values.values, columns=ca_features.columns)
-shap_values = explainer(mi_features)
-mi_shap = pd.DataFrame(shap_values.values, columns=ca_features.columns)
-# %%
-# SHAP KS
-for feat in ca_features.columns:
-    pval = kstest(ca_shap[feat], mi_shap[feat]).pvalue
-    if pval < 0.1:
-        print(feat, " is distinct ", pval)
-    else:
-        print(feat, " is equivalent ", pval)
-# %%
-## Shap Estimator on CA and MI
-se = ShapEstimator(model=XGBRegressor())
-shap_pred_ca = cross_val_predict(se, ca_features, ca_labels, cv=3)
-shap_pred_ca = pd.DataFrame(shap_pred_ca, columns=ca_features.columns)
-shap_pred_ca = shap_pred_ca.add_suffix("_shap")
-
-se.fit(ca_features, ca_labels)
-error_ca = ca_labels == preds_ca
-# %%
-# Estimators for the loop
-estimators = defaultdict()
-estimators["Linear"] = Pipeline(
-    [("scaler", StandardScaler()), ("model", LogisticRegression())]
+## Demographic parity
+plt.figure()
+ks = kstest(
+    preds_ca_train[(ca_group_train == 1)], preds_ca_train[(ca_group_train == 2)]
 )
-estimators["RandomForest"] = RandomForestClassifier(random_state=0)
-estimators["XGBoost"] = XGBClassifier(random_state=0)
-estimators["MLP"] = MLPClassifier(random_state=0)
-# %%
-# Loop over different G estimators
-for estimator in estimators:
-    print(estimator)
-    clf = estimators[estimator]
-
-    preds_ca_shap = cross_val_predict(
-        clf, shap_pred_ca, error_ca, cv=3, method="predict_proba"
-    )[:, 1]
-    clf.fit(shap_pred_ca, error_ca)
-
-    shap_pred_mi = se.predict(mi_features)
-    shap_pred_mi = pd.DataFrame(shap_pred_mi, columns=ca_features.columns)
-    shap_pred_mi = shap_pred_mi.add_suffix("_shap")
-    error_mi = mi_labels == preds_mi
-    preds_mi_shap = clf.predict_proba(shap_pred_mi)[:, 1]
-
-    ## Only SHAP
-    print("Only Shap")
-    print(roc_auc_score(error_ca, preds_ca_shap))
-    print(roc_auc_score(error_mi, preds_mi_shap))
-    ## Only data
-    print("Only Data")
-    preds_ca_shap = cross_val_predict(
-        clf, ca_features, error_ca, cv=3, method="predict_proba"
-    )[:, 1]
-    clf.fit(ca_features, error_ca)
-    preds_mi_shap = clf.predict_proba(mi_features)[:, 1]
-    print(roc_auc_score(error_ca, preds_ca_shap))
-    print(roc_auc_score(error_mi, preds_mi_shap))
-
-    ## SHAP + Data
-    print("Shap + Data")
-    ca_full = pd.concat([shap_pred_ca, ca_features], axis=1)
-    mi_full = pd.concat([shap_pred_mi, mi_features], axis=1)
-
-    preds_ca_shap = cross_val_predict(
-        clf, ca_full, error_ca, cv=3, method="predict_proba"
-    )[:, 1]
-    clf.fit(ca_full, error_ca)
-    preds_mi_shap = clf.predict_proba(mi_full)[:, 1]
-    print(roc_auc_score(error_ca, preds_ca_shap))
-    print(roc_auc_score(error_mi, preds_mi_shap))
+plt.title(
+    "Distribution of predictions; KS test: {:.2f} with pvalue {:.2e}".format(
+        ks.statistic, ks.pvalue
+    )
+)
+sns.kdeplot(preds_ca_train[(ca_group_train == 1)], shade=True, label="White")
+sns.kdeplot(preds_ca_train[(ca_group_train == 2)], shade=True, label="Black")
+plt.legend()
+plt.show()
 
 # %%
-# Original Error
+explainer = shap.Explainer(model)
+shap_values = explainer(ca_features_test)
+ca_shap = pd.DataFrame(shap_values.values, columns=ca_features.columns)
+
+# %%
+
+X_tr, X_te, y_tr, y_te = train_test_split(
+    ca_shap[(ca_group_test == 1) | (ca_group_test == 2)],
+    ca_group_test[(ca_group_test == 1) | (ca_group_test == 2)],
+    random_state=0,
+    test_size=0.2,
+    stratify=ca_group_test[(ca_group_test == 1) | (ca_group_test == 2)],
+)
+# %%
+m = LogisticRegression()
+m.fit(X_tr, y_tr)
+print("AUC shap", roc_auc_score(y_te, m.predict_proba(X_te)[:, 1], multi_class="ovr"))
+
+# %%
+explainer = shap.LinearExplainer(m, X_tr, feature_dependence="correlation_dependent")
+shap_test = explainer(X_te)
+# shap_test = pd.DataFrame(shap_test.values, columns=ca_features.columns)
+# %%
+shap.plots.waterfall(shap_values[0])
+# %%
+shap.plots.bar(shap_values)
+# %%
+shap.plots.beeswarm(shap_values)
+# %%
