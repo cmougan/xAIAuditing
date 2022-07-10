@@ -113,13 +113,14 @@ for gamma in np.linspace(0, 1, 10):
 
 # %%
 plt.figure()
-pd.DataFrame(
-    res, columns=["gamma", "Explanation Space", "Output Space", "Input+Output Space"]
-).plot(x="gamma", y=["Explanation Space", "Output Space", "Input+Output Space"])
+plt.title("Usage of different spaces for fairness audit")
+plt.plot(df["gamma"], df["Explanation Space"], label="Explanation Space", marker=">")
+plt.plot(df["gamma"], df["Output Space"], label="Output Space")
+plt.plot(df["gamma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
+plt.legend()
 plt.ylabel("AUC")
+plt.xlabel("Gamma")
 plt.show()
-
-
 # %%
 plt.figure()
 sns.barplot(y=linear_coefficients["1.0Shap"][0], x=[1, 2, 3])
@@ -127,3 +128,5 @@ plt.show()
 plt.figure()
 sns.barplot(y=linear_coefficients["1.0InputOutput"][0], x=[1, 2, 3, 4])
 plt.show()
+
+# %%
