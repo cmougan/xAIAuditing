@@ -31,7 +31,7 @@ for sigma in np.linspace(0, 1, 10):
     X = pd.DataFrame([x1, x2, x3, x4]).T
     X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
 
-    y = (x1 + x2 + x3) / 3
+    y = (x1 + x2 +x3) / 3
     y = 1 / (1 + np.exp(-y))
 
     # Train test split
@@ -113,4 +113,7 @@ plt.plot(df["sigma"], df["Input+Output Space"], label="Input+Output Space", mark
 plt.legend()
 plt.ylabel("AUC")
 plt.xlabel("sigma")
+plt.savefig("images/fairAuditSyntheticCaseA.png")
 plt.show()
+
+# %%
