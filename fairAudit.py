@@ -12,10 +12,13 @@ import seaborn as sns
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 from collections import defaultdict
+from scipy.stats import wasserstein_distance
 
 plt.style.use("seaborn-whitegrid")
 # %%
 N = 5_000
+dp = []
+res = []
 for sigma in np.linspace(0, 1, 10):
     x1 = np.random.normal(1, 1, size=N)
     x2 = np.random.normal(1, 1, size=N)
@@ -27,18 +30,87 @@ for sigma in np.linspace(0, 1, 10):
 
     X = pd.DataFrame([x1, x2, x3, x4]).T
     X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
-    Z = X.var4.values
 
     y = (x1 + x2 + x3) / 3
     y = 1 / (1 + np.exp(-y))
 
+    # Train test split
+    X_tr, X_te, y_tr, y_te = train_test_split(
+        X,
+        y,
+        test_size=0.33,
+        random_state=42,
+    )
+    Z_tr = X_tr.var4.values
+    Z_te = X_te.var4.values
+
+    # Drop protected attribute
+    X_tr = X_tr.drop("var4", axis=1)
+    X_te = X_te.drop("var4", axis=1)
+
+    # Learning of the model F
     model = LinearRegression()
-    model.fit(X, y)
+    model.fit(X_tr, y_tr)
 
-    plt.figure()
-    sns.kdeplot(model.predict(X[X["var4"] == 0]), label="0", shade=True)
-    sns.kdeplot(model.predict(X[X["var4"] == 1]), label="1", shade=True)
-    plt.show()
-    # %%
+    preds_tr = model.predict(X_tr)
+    preds_te = model.predict(X_te)
 
-    # %%
+    # Demographic parity calculation
+    dist = wasserstein_distance(
+        model.predict(X_te[Z_te == 0]), model.predict(X_te[Z_te == 1])
+    )
+    dp.append(dist)
+    # Visualizations of distribution of predictions
+    # plt.figure()
+    # sns.kdeplot(model.predict(X_te[Z_te == 0]), label="0", shade=True)
+    # sns.kdeplot(model.predict(X_te[Z_te == 1]), label="1", shade=True)
+    # plt.show()
+
+    # SHAP
+    explainer = shap.LinearExplainer(
+        model, X_tr, feature_dependence="correlation_dependent"
+    )
+    # explainer = shap.Explainer(model)
+    shapX1 = explainer(X_tr).values
+    shapX1 = pd.DataFrame(shapX1)
+    shapX1.columns = ["var%d" % (i + 1) for i in range(shapX1.shape[1])]
+    shapX2 = explainer(X_te).values
+    shapX2 = pd.DataFrame(shapX2)
+    shapX2.columns = ["var%d" % (i + 1) for i in range(shapX2.shape[1])]
+
+    m = LogisticRegression()
+    m.fit(shapX1, Z_tr)
+    res1 = roc_auc_score(Z_te, m.predict_proba(shapX2)[:, 1])
+
+    # Output
+    m = LogisticRegression()
+    m.fit(preds_tr.reshape(-1, 1), Z_tr)
+    res2 = roc_auc_score(Z_te, m.predict_proba(preds_te.reshape(-1, 1))[:, 1])
+
+    # Input + Output
+    # Data Engineering
+    aux_tr = X_tr.copy()
+    aux_te = X_te.copy()
+    aux_tr["preds"] = preds_tr
+    aux_te["preds"] = preds_te
+    m = LogisticRegression()
+    m.fit(aux_tr, Z_tr)
+    res3 = roc_auc_score(Z_te, m.predict_proba(aux_te)[:, 1])
+
+    res.append([sigma, res1, res2, res3])
+
+# %%
+df = pd.DataFrame(
+    res, columns=["sigma", "Explanation Space", "Output Space", "Input+Output Space"]
+)
+plt.figure()
+plt.title("Usage of different spaces for fairness audit")
+plt.plot(
+    df["sigma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
+)
+plt.plot(df["sigma"], df["Output Space"], label="Output Space")
+plt.plot(df["sigma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
+plt.legend()
+plt.ylabel("AUC")
+plt.xlabel("sigma")
+plt.show()
