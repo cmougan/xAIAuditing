@@ -1,4 +1,5 @@
 # %%
+from cmath import exp
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -19,6 +20,7 @@ plt.style.use("seaborn-whitegrid")
 N = 5_000
 dp = []
 res = []
+exp_evolution = pd.DataFrame()
 for sigma in np.linspace(0, 1, 10):
     x1 = np.random.normal(1, 1, size=N)
     x2 = np.random.normal(1, 1, size=N)
@@ -31,7 +33,7 @@ for sigma in np.linspace(0, 1, 10):
     X = pd.DataFrame([x1, x2, x3, x4]).T
     X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
 
-    y = (x1 + x2 +x3) / 3
+    y = (x1 + x2 + x3) / 3
     y = 1 / (1 + np.exp(-y))
 
     # Train test split
@@ -81,6 +83,7 @@ for sigma in np.linspace(0, 1, 10):
     m = LogisticRegression()
     m.fit(shapX1, Z_tr)
     res1 = roc_auc_score(Z_te, m.predict_proba(shapX2)[:, 1])
+    exp_evolution[sigma] = pd.DataFrame(m.coef_.squeeze())
 
     # Output
     m = LogisticRegression()
@@ -115,5 +118,9 @@ plt.ylabel("AUC")
 plt.xlabel("sigma")
 plt.savefig("images/fairAuditSyntheticCaseA.png")
 plt.show()
-
 # %%
+plt.figure()
+plt.title("Feature  importance of the auditing model on the explanation space")
+sns.barplot(X_te.columns, exp_evolution[exp_evolution.columns[-1]])
+plt.savefig("images/explainingFairnessAudit.png")
+plt.show()# %%
