@@ -21,10 +21,10 @@ N = 5_000
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
-for sigma in np.linspace(0, 1, 10):
+for gamma in np.linspace(0, 1, 10):
     x1 = np.random.normal(1, 1, size=N)
     x2 = np.random.normal(1, 1, size=N)
-    x34 = np.random.multivariate_normal([1, 1], [[1, sigma], [sigma, 1]], size=N)
+    x34 = np.random.multivariate_normal([1, 1], [[1, gamma], [gamma, 1]], size=N)
     x3 = x34[:, 0]
     x4 = x34[:, 1]
     # Binarize protected attribute
@@ -83,7 +83,7 @@ for sigma in np.linspace(0, 1, 10):
     m = LogisticRegression()
     m.fit(shapX1, Z_tr)
     res1 = roc_auc_score(Z_te, m.predict_proba(shapX2)[:, 1])
-    exp_evolution[sigma] = pd.DataFrame(m.coef_.squeeze())
+    exp_evolution[gamma] = pd.DataFrame(m.coef_.squeeze())
 
     # Output
     m = LogisticRegression()
@@ -100,22 +100,22 @@ for sigma in np.linspace(0, 1, 10):
     m.fit(aux_tr, Z_tr)
     res3 = roc_auc_score(Z_te, m.predict_proba(aux_te)[:, 1])
 
-    res.append([sigma, res1, res2, res3])
+    res.append([gamma, res1, res2, res3])
 
 # %%
 df = pd.DataFrame(
-    res, columns=["sigma", "Explanation Space", "Output Space", "Input+Output Space"]
+    res, columns=["gamma", "Explanation Space", "Output Space", "Input+Output Space"]
 )
 plt.figure()
 plt.title("Usage of different spaces for fairness audit")
 plt.plot(
-    df["sigma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
+    df["gamma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
 )
-plt.plot(df["sigma"], df["Output Space"], label="Output Space")
-plt.plot(df["sigma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
+plt.plot(df["gamma"], df["Output Space"], label="Output Space")
+plt.plot(df["gamma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
 plt.legend()
 plt.ylabel("AUC")
-plt.xlabel("sigma")
+plt.xlabel("gamma")
 plt.savefig("images/fairAuditSyntheticCaseA.png")
 plt.show()
 # %%
