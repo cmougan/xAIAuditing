@@ -123,4 +123,4 @@ plt.figure()
 plt.title("Feature  importance of the auditing model on the explanation space")
 sns.barplot(X_te.columns, exp_evolution[exp_evolution.columns[-1]])
 plt.savefig("images/explainingFairnessAudit.png")
-plt.show()# %%
+plt.show()  # %%
