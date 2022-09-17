@@ -119,7 +119,20 @@ plt.savefig("images/fairAuditSyntheticCaseA.png")
 plt.show()
 # %%
 plt.figure()
-plt.title("Feature  importance of the auditing model on the explanation space")
+plt.title("Global feature importance of the auditing model on the explanation space")
 sns.barplot(X_te.columns, exp_evolution[exp_evolution.columns[-1]])
 plt.savefig("images/explainingFairnessAudit.png")
-plt.show()  # %%
+plt.show()
+# %%
+## Fit again the fairness auditor with the last gamma for viz purposes
+m = LogisticRegression()
+m.fit(shapX1, Z_tr)
+explainer = shap.Explainer(m.predict, shapX1)
+shap_values = explainer(shapX1.head(1))
+plt.figure()
+plt.title("Local feature importance of the auditing model on the explanation space")
+shap.plots.waterfall(shap_values[0])
+plt.savefig("images/explainingFairnessAuditLocal.png")
+plt.show()
+
+# %%
