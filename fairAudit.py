@@ -1,9 +1,9 @@
 # %%
-from cmath import exp
+
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score, r2_score
+from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier, XGBRegressor
 import seaborn as sns
 import shap
@@ -12,7 +12,6 @@ from fairtools.detector import shap_detector
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
-from collections import defaultdict
 from scipy.stats import wasserstein_distance
 
 plt.style.use("seaborn-whitegrid")
