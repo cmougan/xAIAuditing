@@ -131,7 +131,7 @@ explainer = shap.Explainer(m.predict, shapX1)
 shap_values = explainer(shapX1.head(1))
 plt.figure()
 plt.title("Local feature importance of the auditing model on the explanation space")
-shap.plots.waterfall(shap_values[0])
+shap.plots.waterfall(shap_values[0], show=False)
 plt.savefig("images/explainingFairnessAuditLocal.png")
 plt.show()
 
