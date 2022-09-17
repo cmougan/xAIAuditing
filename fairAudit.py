@@ -32,7 +32,12 @@ for gamma in np.linspace(0, 1, 10):
     X = pd.DataFrame([x1, x2, x3, x4]).T
     X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
 
+    # Different exp -- Remember to change the name of the visualization
+    # Case A
     y = (x1 + x2 + x3) / 3
+    # Case B
+    # y = (x1 + x2) / 3
+
     y = 1 / (1 + np.exp(-y))
 
     # Train test split
@@ -121,6 +126,7 @@ plt.show()
 plt.figure()
 plt.title("Global feature importance of the auditing model on the explanation space")
 sns.barplot(X_te.columns, exp_evolution[exp_evolution.columns[-1]])
+plt.tight_layout()
 plt.savefig("images/explainingFairnessAudit.png")
 plt.show()
 # %%
@@ -132,6 +138,7 @@ shap_values = explainer(shapX1.head(1))
 plt.figure()
 plt.title("Local feature importance of the auditing model on the explanation space")
 shap.plots.waterfall(shap_values[0], show=False)
+plt.tight_layout()
 plt.savefig("images/explainingFairnessAuditLocal.png")
 plt.show()
 
