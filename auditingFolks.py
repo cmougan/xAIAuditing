@@ -135,6 +135,7 @@ if G == "Linear":
     plt.ylabel("Absolute value of regression coefficient")
     sns.barplot(x=res.feature, y=res.coef)
     plt.xticks(rotation=45)
+    plt.savefig("images/folksglobal.png")
     plt.show()
     # Local
     plt.figure()
@@ -143,6 +144,7 @@ if G == "Linear":
     ind_coef = np.abs(X_te.iloc[40].values * g.named_steps["model"].coef_[0])
     sns.barplot(x=res.feature, y=ind_coef)
     plt.xticks(rotation=45)
+    plt.savefig("images/folkslocal.png")
     plt.show()
 elif G == "XGBoost":
     explainer = shap.TreeExplainer(g)
@@ -151,12 +153,14 @@ elif G == "XGBoost":
     plt.figure()
     plt.title("Global Feature Importance")
     shap.plots.bar(shap_values, max_display=20, show=False)
+    plt.savefig("images/folksglobal.png")
     plt.show()
     # Local
     plt.figure()
     plt.title("Local Feature Importance")
     # visualize the first prediction's explanation
     shap.plots.waterfall(shap_values[0], show=False)
+    plt.savefig("images/folkslocal.png")
     plt.show()
 
 
