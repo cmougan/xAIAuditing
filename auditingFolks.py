@@ -71,7 +71,7 @@ Z_te = test["group"].values
 del ca_features, ca_labels, ca_group
 # %%
 ## Decide the model type of F & G
-F = "XGboost"
+F = "XGBoost"
 G = "XGBoost"
 # %%
 # Modeling
