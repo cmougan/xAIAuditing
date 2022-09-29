@@ -71,8 +71,8 @@ Z_te = test["group"].values
 del ca_features, ca_labels, ca_group
 # %%
 ## Decide the model type of F & G
-F = "Linear"
-G = "Linear"
+F = "XGboost"
+G = "XGBoost"
 # %%
 # Modeling
 if F == "Linear":
