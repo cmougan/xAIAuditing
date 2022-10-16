@@ -1,5 +1,4 @@
 # %%
-
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -94,6 +93,11 @@ for gamma in np.linspace(0, 1, 10):
     m.fit(preds_tr.reshape(-1, 1), Z_tr)
     res2 = roc_auc_score(Z_te, m.predict_proba(preds_te.reshape(-1, 1))[:, 1])
 
+    # Input
+    m = LogisticRegression()
+    m.fit(X_tr, Z_tr)
+    res3 = roc_auc_score(Z_te, m.predict_proba(X_te)[:, 1])
+
     # Input + Output
     # Data Engineering
     aux_tr = X_tr.copy()
@@ -102,19 +106,27 @@ for gamma in np.linspace(0, 1, 10):
     aux_te["preds"] = preds_te
     m = LogisticRegression()
     m.fit(aux_tr, Z_tr)
-    res3 = roc_auc_score(Z_te, m.predict_proba(aux_te)[:, 1])
+    res4 = roc_auc_score(Z_te, m.predict_proba(aux_te)[:, 1])
 
-    res.append([gamma, res1, res2, res3])
+    res.append([gamma, res1, res2, res3, res4])
 
 # %%
 df = pd.DataFrame(
-    res, columns=["gamma", "Explanation Space", "Output Space", "Input+Output Space"]
+    res,
+    columns=[
+        "gamma",
+        "Explanation Space",
+        "Output Space",
+        "Input Space",
+        "Input+Output Space",
+    ],
 )
 plt.figure()
 plt.title("Usage of different spaces for fairness audit")
 plt.plot(
     df["gamma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
 )
+plt.plot(df["gamma"], df["Input Space"] * 0.99, label="Input Space", marker=".")
 plt.plot(df["gamma"], df["Output Space"], label="Output Space")
 plt.plot(df["gamma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
 plt.legend()
