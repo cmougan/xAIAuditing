@@ -16,10 +16,11 @@ from scipy.stats import wasserstein_distance
 plt.style.use("seaborn-whitegrid")
 # %%
 N = 5_000
+CASE_A = True
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
-for gamma in np.linspace(0, 1, 10):
+for gamma in np.linspace(0, 1, 20):
     x1 = np.random.normal(1, 1, size=N)
     x2 = np.random.normal(1, 1, size=N)
     x34 = np.random.multivariate_normal([1, 1], [[1, gamma], [gamma, 1]], size=N)
@@ -33,9 +34,11 @@ for gamma in np.linspace(0, 1, 10):
 
     # Different exp -- Remember to change the name of the visualization
     # Case A
-    y = (x1 + x2 + x3) / 3
-    # Case B
-    # y = (x1 + x2) / 3
+    if CASE_A:
+        y = (x1 + x2 + x3) / 3
+    else:
+        # Case B
+        y = (x1 + x2) / 3
 
     y = 1 / (1 + np.exp(-y))
 
@@ -132,7 +135,10 @@ plt.plot(df["gamma"], df["Input+Output Space"], label="Input+Output Space", mark
 plt.legend()
 plt.ylabel("AUC")
 plt.xlabel("gamma")
-plt.savefig("images/fairAuditSyntheticCaseA.png")
+if CASE_A:
+    plt.savefig("images/fairAuditSyntheticCaseA.png")
+else:
+    plt.savefig("images/fairAuditSyntheticCaseB.png")
 plt.show()
 # %%
 plt.figure()
