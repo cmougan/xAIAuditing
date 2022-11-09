@@ -60,13 +60,22 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         else:
             return self.model.__class__.__name__
 
-    def split_data(self, X, y, n1=0.6, n2=0.5):
+    def get_split_data(self, X, y, n1=0.6, n2=0.5):
         self.X_tr, X_val, self.y_tr, y_val = train_test_split(
             X, y, random_state=0, test_size=0.6
         )
         self.X_val, self.X_te, self.y_val, self.y_te = train_test_split(
             X_val, y_val, random_state=0, test_size=0.5
         )
+        # Check number of classes present in label
+        if len(set(self.y_tr)) <= 1:
+            raise ValueError("Train set has only one class")
+        if len(set(self.y_val)) <= 1:
+            raise ValueError("Validation set has only one class")
+        if len(set(self.y_te)) <= 1:
+            raise ValueError("Test set has only one class")
+
+        return self.X_tr, self.X_val, self.X_te, self.y_tr, self.y_val, self.y_te
 
     def fit(self, X, y, Z):
 
@@ -75,7 +84,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         self.Z = Z
 
         # Split data intro train, validation and test
-        self.split_data(X, y)
+        _ = self.get_split_data(X, y)
 
         # Extract prottected att. and remove from data
         self.Z_tr = self.X_tr[self.Z]
@@ -91,7 +100,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         # Get explanations
         self.S_val = self.get_explanations(self.X_val)
 
-        # Fir model G
+        # Fit model G
         self.fit_audit_detector(self.S_val, self.Z_val)
 
         return self
@@ -147,7 +156,10 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         return exp
 
     def get_auc_f_val(self):
-        return roc_auc_score(self.y_val, self.model.predict_proba(self.X_val)[:, 1])
+        """
+        TODO Case of F being a classifier
+        """
+        return roc_auc_score(self.y_val, self.model.predict(self.X_val))
 
     def get_auc_val(self):
         """
