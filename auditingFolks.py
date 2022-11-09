@@ -35,7 +35,7 @@ X, y = data.get_state(year="2014", state="CA")
 X_ = X.drop(["group"], axis=1)
 # %%
 # Train on CA data
-coefs = []
+cofs = []
 aucs = []
 for i in tqdm(range(100)):
     # Bootstrap
@@ -56,7 +56,7 @@ for i in tqdm(range(100)):
     audit.fit(X_train, y_train, Z="group")
 
     # Save results
-    coefs.append(audit.get_coefs()[0])
+    cofs.append(audit.get_coefs()[0])
     aucs.append(audit.get_auc_val())
 
 # %%
@@ -96,7 +96,7 @@ plt.show()
 coefs = pd.DataFrame(ood_coefs, columns=X_.columns)
 coefs_res = pd.DataFrame(index=coefs.columns)
 for i in range(len(ood_coefs)):
-    coefs_res[states[i]] = np.mean(coefs <= ood_coefs[i])
+    coefs_res[states[i]] = np.mean(cofs <= ood_coefs[i], axis=0)
 
 # %%
 coefs_res["mean"] = coefs_res.mean(axis=1)
@@ -131,3 +131,5 @@ sns.barplot(x=X_.columns, y=ind_coef)
 plt.xticks(rotation=45)
 plt.savefig("images/folkslocal.png")
 plt.show()
+
+# %%
