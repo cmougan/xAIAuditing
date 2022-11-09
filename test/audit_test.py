@@ -26,6 +26,10 @@ def test_get_splits():
     assert detector.X_val.shape == (N * 0.6 * 0.5, 5)
     assert detector.X_te.shape == (N * 0.6 * 0.5, 5)
 
+    assert len(set(detector.y_tr)) > 1
+    assert len(set(detector.y_val)) > 1
+    assert len(set(detector.y_te)) > 1
+
 
 def test_return_shapDF():
     """
