@@ -32,7 +32,7 @@ from sklearn.metrics import (
 )
 
 # Specific packages
-from xgboost import XGBRegressor
+from xgboost import XGBRegressor, XGBClassifier
 import shap
 
 # Seeding
@@ -46,7 +46,6 @@ X, y = data.get_state(year="2014", state="CA")
 X_ = X.drop(["group"], axis=1)
 # %%
 # Train on CA data
-audit = ExplanationAudit(model=XGBRegressor(), gmodel=LogisticRegression())
 coefs = []
 aucs = []
 for i in tqdm(range(10)):
@@ -54,7 +53,20 @@ for i in tqdm(range(10)):
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.8, random_state=i)
     # Random assign
     X_train["group"] = np.random.randint(0, 2, X_train.shape[0])
+
+    # Train model
+    audit = ExplanationAudit(
+        model=XGBRegressor(),
+        gmodel=Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("lr", LogisticRegression(penalty="l1", solver="liblinear")),
+            ]
+        ),
+    )
     audit.fit(X_train, y_train, Z="group")
+
+    # Save results
     coefs.append(audit.get_coefs()[0])
     aucs.append(audit.get_auc_val())
 
@@ -130,5 +142,3 @@ sns.barplot(x=X_.columns, y=ind_coef)
 plt.xticks(rotation=45)
 plt.savefig("images/folkslocal.png")
 plt.show()
-
-# %%
