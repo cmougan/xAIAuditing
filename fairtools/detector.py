@@ -166,7 +166,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         Returns the AUC of the validation set
 
         """
-        return roc_auc_score(self.y_te, self.predict_proba(self.X_te)[:, 1])
+        return roc_auc_score(self.Z_te, self.predict_proba(self.X_te)[:, 1])
 
     def get_coefs(self):
         if self.gmodel.__class__.__name__ == "Pipeline":
