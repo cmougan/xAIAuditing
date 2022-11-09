@@ -146,6 +146,9 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         )
         return exp
 
+    def get_auc_f_val(self):
+        return roc_auc_score(self.y_val, self.model.predict_proba(self.X_val)[:, 1])
+
     def get_auc_val(self):
         """
         Returns the AUC of the validation set
