@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.datasets import make_blobs
-from folktables import ACSDataSource, ACSTravelTime
+from folktables import ACSDataSource, ACSTravelTime, ACSIncome
 import numpy as np
+
 
 d = {
     "AGEP": "Age",
@@ -67,17 +68,19 @@ class GetData:
 
         return self.X, self.y, self.group
 
-    def get_state(self, year: str = "2014", state: str = "NY"):
-        # OOD data
+    def get_state(self, year: str = "2014", state: str = "NY", data="ACSIncome"):
         data_source = ACSDataSource(survey_year=year, horizon="1-Year", survey="person")
         try:
             acs_data = data_source.get_data(states=[state], download=False)
         except:
             acs_data = data_source.get_data(states=[state], download=True)
-        ca_features, ca_labels, ca_group = ACSTravelTime.df_to_numpy(acs_data)
-        ca_features = pd.DataFrame(ca_features, columns=ACSTravelTime.features).rename(
-            columns=d
-        )
+        if data == "ACSIncome":
+            ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(acs_data)
+            ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features).rename(
+                columns=d
+            )
+        else:
+            raise NotImplementedError
 
         # Filter to only have groups 1 and 2
         ca_features["group"] = ca_group
@@ -89,8 +92,7 @@ class GetData:
         # ca_features["group"] = ca_features["group"].values - 1  # This is to make it 0 and 1
 
         # Split data
-        X = ca_features.drop(["label", "RAC1P"], axis=1)
-        X_ = X.drop(["group"], axis=1)
+        X = ca_features.drop(["label", "Race"], axis=1)
         y = ca_features["group"]
 
         # Shorten data
