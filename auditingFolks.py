@@ -6,14 +6,6 @@ from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
-from folktables import (
-    ACSDataSource,
-    ACSIncome,
-    ACSEmployment,
-    ACSMobility,
-    ACSPublicCoverage,
-    ACSTravelTime,
-)
 import pandas as pd
 import seaborn as sns
 
@@ -27,13 +19,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (
-    roc_auc_score,
-)
+
 
 # Specific packages
-from xgboost import XGBRegressor, XGBClassifier
-import shap
+from xgboost import XGBRegressor
 
 # Seeding
 np.random.seed(0)
@@ -48,7 +37,7 @@ X_ = X.drop(["group"], axis=1)
 # Train on CA data
 coefs = []
 aucs = []
-for i in tqdm(range(10)):
+for i in tqdm(range(100)):
     # Bootstrap
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.8, random_state=i)
     # Random assign
