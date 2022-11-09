@@ -21,6 +21,19 @@ d = {
     "RAC1P": "Race",
     "AGEP": "Age",
     "POWPUMA": "WorkPlace",
+    "COW": "ClassOfWorker",
+    "WKHP": "WorkHours",
+    "POBP": "PlaceOfBirth",
+}
+r = {
+    1: "White alone",
+    2: "Black or African American alone",
+    3: "American Indian",
+    4: "Alaska Native",
+    5: "American Indian",
+    6: "Asian Indian",
+    7: "Hawaiian",
+    8: "Other",
 }
 
 
@@ -46,7 +59,14 @@ class GetData:
         self.supported_types = ["blobs", "synthetic", "real"]
         assert self.type in self.supported_types
 
-    def get_state(self, year: str = "2014", state: str = "NY", data="ACSIncome"):
+    def get_state(
+        self,
+        year: str = "2014",
+        state: str = "NY",
+        data: str = "ACSIncome",
+        group1: int = 6,
+        group2: int = 8,
+    ):
         data_source = ACSDataSource(survey_year=year, horizon="1-Year", survey="person")
         try:
             acs_data = data_source.get_data(states=[state], download=False)
@@ -64,7 +84,7 @@ class GetData:
         ca_features["group"] = ca_group
         ca_features["label"] = ca_labels
         ca_features = ca_features[
-            (ca_features["group"] == 8) | (ca_features["group"] == 6)
+            (ca_features["group"] == group1) | (ca_features["group"] == group2)
         ]
         ca_features["group"] = np.where(ca_features["group"] == 8, 1, 0)
         # ca_features["group"] = ca_features["group"].values - 1  # This is to make it 0 and 1
