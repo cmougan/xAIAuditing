@@ -46,28 +46,6 @@ class GetData:
         self.supported_types = ["blobs", "synthetic", "real"]
         assert self.type in self.supported_types
 
-    def get_data(self):
-
-        ## Real data based on US census data
-        data_source = ACSDataSource(
-            survey_year="2014", horizon="1-Year", survey="person"
-        )
-        try:
-            acs_data = data_source.get_data(states=["CA"], download=False)
-        except:
-            acs_data = data_source.get_data(states=["CA"], download=True)
-        X, y, group = ACSTravelTime.df_to_numpy(acs_data)
-        X = pd.DataFrame(X, columns=ACSTravelTime.features).rename(columns=d)
-
-        self.X = X.rename(columns=d)
-
-        # Lets make smaller data for computational reasons
-        self.X = X.head(self.N)
-        self.y = y[: self.N]
-        self.group = group[: self.N]
-
-        return self.X, self.y, self.group
-
     def get_state(self, year: str = "2014", state: str = "NY", data="ACSIncome"):
         data_source = ACSDataSource(survey_year=year, horizon="1-Year", survey="person")
         try:
@@ -92,11 +70,11 @@ class GetData:
         # ca_features["group"] = ca_features["group"].values - 1  # This is to make it 0 and 1
 
         # Split data
-        X = ca_features.drop(["label", "Race"], axis=1)
-        y = ca_features["group"]
+        self.X = ca_features.drop(["label", "Race"], axis=1)
+        self.y = ca_features["label"]
 
         # Shorten data
-        self.X = X.head(self.N)
-        self.y = y[: self.N]
+        # self.X = X.head(self.N)
+        # self.y = y[: self.N]
 
         return self.X, self.y
