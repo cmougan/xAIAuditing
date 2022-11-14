@@ -34,6 +34,7 @@ r = {
     6: "Asian Indian",
     7: "Hawaiian",
     8: "Other",
+    9: "Mixed Race",
 }
 
 
@@ -66,7 +67,9 @@ class GetData:
         data: str = "ACSIncome",
         group1: int = 6,
         group2: int = 8,
+        verbose: str = False,
     ):
+
         data_source = ACSDataSource(survey_year=year, horizon="1-Year", survey="person")
         try:
             acs_data = data_source.get_data(states=[state], download=False)
@@ -83,10 +86,13 @@ class GetData:
         # Filter to only have groups 1 and 2
         ca_features["group"] = ca_group
         ca_features["label"] = ca_labels
+        if verbose:
+            print(ca_features["group"].value_counts())
         ca_features = ca_features[
             (ca_features["group"] == group1) | (ca_features["group"] == group2)
         ]
-        ca_features["group"] = np.where(ca_features["group"] == 8, 1, 0)
+        # Rename features
+        ca_features["group"] = np.where(ca_features["group"] == group1, 1, 0)
         # ca_features["group"] = ca_features["group"].values - 1  # This is to make it 0 and 1
 
         # Split data

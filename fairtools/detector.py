@@ -60,12 +60,12 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         else:
             return self.model.__class__.__name__
 
-    def get_split_data(self, X, y, n1=0.6, n2=0.5):
+    def get_split_data(self, X, y, Z, n1=0.6, n2=0.5):
         self.X_tr, X_val, self.y_tr, y_val = train_test_split(
-            X, y, random_state=0, test_size=0.6
+            X, y, random_state=0, test_size=0.6, stratify=X[Z]
         )
         self.X_val, self.X_te, self.y_val, self.y_te = train_test_split(
-            X_val, y_val, random_state=0, test_size=0.5
+            X_val, y_val, random_state=0, test_size=0.5, stratify=X_val[Z]
         )
         # Check number of classes present in label
         if len(set(self.y_tr)) <= 1:
@@ -74,6 +74,14 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
             raise ValueError("Validation set has only one class")
         if len(set(self.y_te)) <= 1:
             raise ValueError("Test set has only one class")
+
+        # Check number or protected groups
+        if len(set(self.X_tr[Z])) <= 1:
+            raise ValueError("Train set has only one protected group")
+        if len(set(self.X_val[Z])) <= 1:
+            raise ValueError("Validation set has only one protected group")
+        if len(set(self.X_te[Z])) <= 1:
+            raise ValueError("Test set has only one protected group")
 
         return self.X_tr, self.X_val, self.X_te, self.y_tr, self.y_val, self.y_te
 
@@ -84,7 +92,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         self.Z = Z
 
         # Split data intro train, validation and test
-        _ = self.get_split_data(X, y)
+        _ = self.get_split_data(X, y, Z)
 
         # Extract prottected att. and remove from data
         self.Z_tr = self.X_tr[self.Z]
