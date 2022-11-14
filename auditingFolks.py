@@ -115,7 +115,7 @@ for i, value in enumerate(pairs_named):
     plt.axvline(ood_auc[i], label=pairs_named[i], color=colors[i])
 plt.legend()
 plt.tight_layout()
-plt.savefig("images/detector_auc.pdf", bbox_inches="tight")
+plt.savefig("images/detector_auc.png")
 plt.show()
 
 # %%
@@ -136,6 +136,7 @@ plt.title("Feature importance of the Explanation Shift detector (p-values)")
 sns.heatmap(coefs_res.sort_values(by="mean", ascending=True), annot=True)
 plt.tight_layout()
 plt.savefig("images/feature_importance.pdf", bbox_inches="tight")
+plt.savefig("images/feature_importance.png")
 plt.show()
 # %%
 # Global
