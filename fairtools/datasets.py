@@ -91,6 +91,11 @@ class GetData:
         ca_features = ca_features[
             (ca_features["group"] == group1) | (ca_features["group"] == group2)
         ]
+        # Remove some feats
+        try:
+            ca_features = ca_features.drop(columns=['PlaceOfBirth'])
+        except:
+            print('Couldnt remove PlaceOfBirth')
         # Rename features
         ca_features["group"] = np.where(ca_features["group"] == group1, 1, 0)
         # ca_features["group"] = ca_features["group"].values - 1  # This is to make it 0 and 1
