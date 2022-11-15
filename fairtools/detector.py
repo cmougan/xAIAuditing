@@ -206,7 +206,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
                 self.gmodel.steps[-1][1].__class__.__name__
                 in self.supported_linear_models
             ):
-                return self.gmodel.steps[-1][1].coef_
+                return self.gmodel.steps[-1][1].coef_[0]
             else:
                 raise ValueError(
                     "Pipeline model not supported. Supported models are: {}, got {}".format(
@@ -219,7 +219,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
 
     def get_linear_coefs(self):
         if self.gmodel.__class__.__name__ in self.supported_linear_models:
-            return self.gmodel.coef_
+            return self.gmodel.coef_[0]
         else:
             raise ValueError(
                 "Detector model not supported. Supported models ar linear: {}, got {}".format(

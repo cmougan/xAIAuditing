@@ -180,6 +180,6 @@ def test_doc_examples():
     # Check that the model prediction works
     assert np.round(detector.get_auc_val(), decimals=1) == 0.7
     # Check that the coefficients are returned correctly
-    coefs = detector.get_coefs()[0]
+    coefs = detector.get_coefs()
     assert len(coefs) == X.shape[1] - 1  # -1 for the protected attribute
     assert np.isnan(coefs).sum() == 0
