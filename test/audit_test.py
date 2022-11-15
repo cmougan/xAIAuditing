@@ -20,8 +20,11 @@ def test_get_splits():
     detector = ExplanationAudit(model=XGBRegressor(), gmodel=LogisticRegression())
     N = 1000
     X, y = make_blobs(n_samples=N, centers=2, n_features=5, random_state=0)
+    X = pd.DataFrame(X, columns=["a", "b", "c", "d", "e"])
+    # Binarize
+    X["a"] = np.where(X["a"] > X["a"].mean(), 1, 0)
 
-    detector.split_data(X, y, n1=0.6, n2=0.5)
+    detector.get_split_data(X, y, Z="a", n1=0.6, n2=0.5)
     assert detector.X_tr.shape == (N * 0.4, 5)
     assert detector.X_val.shape == (N * 0.6 * 0.5, 5)
     assert detector.X_te.shape == (N * 0.6 * 0.5, 5)
