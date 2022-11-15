@@ -7,7 +7,31 @@ import pandas as pd
 
 
 class ExplanationAudit(BaseEstimator, ClassifierMixin):
-    """ """
+    """
+    Given a model, a dataset, and the protected attribute, we want to know if the model violates demographic parity or not and what are the features pushing for it.
+    We do this by computing the shap values of the model, and then train a classifier to distinguish the protected attribute.
+
+    Example
+    -------
+    >>> import pandas as pd
+    >>> from sklearn.model_selection import train_test_split
+    >>> from sklearn.datasets import make_blobs
+    >>> from tools.xaiUtils import ExplanationShiftDetector
+    >>> from xgboost import XGBRegressor
+    >>> from sklearn.linear_model import LogisticRegression
+
+    >>> X, y = make_blobs(n_samples=2000, centers=2, n_features=5, random_state=0)
+    >>> X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=0)
+    >>> X_ood,y_ood = make_blobs(n_samples=1000, centers=1, n_features=5, random_state=0)
+
+    >>> detector = ExplanationShiftDetector(model=XGBRegressor(),gmodel=LogisticRegression())
+    >>> detector.fit(X_tr, y_tr, X_ood)
+    >>> detector.get_auc_val()
+    # 0.76
+    >>> detector.fit(X_tr, y_tr, X_te)
+    >>> detector.get_auc_val()
+    # 0.5
+    """
 
     def __init__(self, model, gmodel):
         self.model = model
