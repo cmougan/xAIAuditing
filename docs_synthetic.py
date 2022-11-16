@@ -6,7 +6,7 @@ from xgboost import XGBRegressor
 from nobias import ExplanationAudit
 
 # %%
-N = 5_000
+N = 10_000
 x1 = np.random.normal(1, 1, size=N)
 x2 = np.random.normal(1, 1, size=N)
 x34 = np.random.multivariate_normal([1, 1], [[1, 0.5], [0.5, 1]], size=N)
@@ -21,4 +21,18 @@ y = 1 / (1 + np.exp(-y))
 detector = ExplanationAudit(model=XGBRegressor(), gmodel=LogisticRegression())
 detector.fit(X, y, Z="var4")
 detector.get_auc_val()
+# %%
+coefs = detector.get_coefs()
+coefs = pd.DataFrame(coefs, index=X.columns[:-1], columns=["coef"]).sort_values(
+    "coef", ascending=False
+)
+coefs.plot(kind="bar")
+# %%
+import matplotlib.pyplot as plt
+plt.style.use("seaborn-whitegrid")
+plt.figure(figsize=(10, 10))
+coefs.plot(kind="bar")
+plt.savefig("images/coefs_synth.png")
+plt.show()
+
 # %%
