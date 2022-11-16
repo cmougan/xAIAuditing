@@ -206,7 +206,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
                 self.gmodel.steps[-1][1].__class__.__name__
                 in self.supported_linear_models
             ):
-                return self.gmodel.steps[-1][1].coef_[0]
+                return self.gmodel.steps[-1][1].coef_
             else:
                 raise ValueError(
                     "Pipeline model not supported. Supported models are: {}, got {}".format(
