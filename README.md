@@ -19,7 +19,6 @@ from xgboost import XGBRegressor
 # Tutorial with Synthetic Dataset
 
 ```python
-# %%
 # Create synthetic data
 N = 5_000
 x1 = np.random.normal(1, 1, size=N)
@@ -31,8 +30,7 @@ x4 = x34[:, 1]
 x4 = np.where(x4 > np.mean(x4), 1, 0)
 X = pd.DataFrame([x1, x2, x3, x4]).T
 X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
-y = (x1 + x2 + x3) / 3
-y = 1 / (1 + np.exp(-y))
+y = 1 / (1 + np.exp(-(x1 + x2 + x3) / 3))
 ```
 
 ```python
