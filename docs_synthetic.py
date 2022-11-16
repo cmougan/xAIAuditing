@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 plt.style.use("seaborn-whitegrid")
 plt.figure(figsize=(10, 10))
 coefs.plot(kind="bar")
+plt.tight_layout()
 plt.savefig("images/coefs_synth.png")
 plt.show()
 
