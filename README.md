@@ -85,5 +85,5 @@ coefs.plot(kind="bar")
 ```
 
 <p align="center">
-  <img width="616" src="https://raw.githubusercontent.com/cmougan/xAIAuditing/master/images/coefs.png" />
+  <img width="616" src="https://raw.githubusercontent.com/cmougan/xAIAuditing/master/images/coefs_real.png" />
 </p>
