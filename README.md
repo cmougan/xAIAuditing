@@ -7,6 +7,9 @@
 This repository contains the code for the paper Discrimination Audits via the Explanation Space, which is available on ...
 
 
+
+
+To run the code, you need to install the packages listed in `requirements_tutorial.txt`. The code is written in Python 3.10
 ```python
 from nobias import ExplanationAudit
 import pandas as pd
@@ -41,7 +44,7 @@ detector.get_auc_val()
 
 ```python
 detector.get_auc_val()
-#0.7
+#0.73
 ```
 ```python
 coefs = detector.get_coefs()
