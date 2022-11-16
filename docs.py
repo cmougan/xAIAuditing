@@ -35,7 +35,7 @@ coefs.plot(kind="bar")
 plt.figure(figsize=(10, 10))
 coefs.plot(kind="bar")
 plt.tight_layout()
-plt.savefig("images/coefs.png")
+plt.savefig("images/coefs_real.png")
 plt.show()
 
 # %%
