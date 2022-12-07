@@ -29,6 +29,7 @@ coefs = pd.DataFrame(coefs, index=X.columns[:-1], columns=["coef"]).sort_values(
 coefs.plot(kind="bar")
 # %%
 import matplotlib.pyplot as plt
+
 plt.style.use("seaborn-whitegrid")
 plt.figure(figsize=(10, 10))
 coefs.plot(kind="bar")
