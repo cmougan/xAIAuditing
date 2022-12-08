@@ -88,7 +88,7 @@ for pair in tqdm(pairs):
     ood_temp = []
     ood_coefs_temp = pd.DataFrame(columns=X.columns)
     for i in range(100):
-        X = X_.sample(frac=0.632, replace=True)
+        X = X_.sample(frac=0.132, replace=True)
         y = y_[X.index]
         try:
             audit.fit(X, y, Z="group")
@@ -150,9 +150,15 @@ coefs_res.sort_values(by="mean", ascending=True)
 # %%
 coefs_res.sort_values(by="mean", ascending=True).shape
 # %%
+from matplotlib.colors import LogNorm, PowerNorm
+
 plt.figure(figsize=(10, 6))
 plt.title("Feature importance of Explanation Audits")
-sns.heatmap(coefs_res.sort_values(by="mean", ascending=False), annot=True)
+sns.heatmap(
+    coefs_res.sort_values(by="mean", ascending=False),
+    annot=True,
+    norm=PowerNorm(gamma=0.5),
+)
 plt.tight_layout()
 plt.savefig("images/feature_importance.pdf", bbox_inches="tight")
 plt.savefig("images/feature_importance.png")
