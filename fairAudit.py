@@ -125,7 +125,10 @@ df = pd.DataFrame(
     ],
 )
 plt.figure()
-plt.title("Usage of different spaces for fairness audit")
+if CASE_A:
+    plt.title("Demographic parity on the data and model")
+else:
+    plt.title("Demographic parity on the data but not model")
 plt.plot(
     df["gamma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
 )
