@@ -64,9 +64,8 @@ for i in tqdm(range(100)):
 ## OOD AUC
 ood_auc = {}
 ood_coefs = {}
-pairs = ["16", "18", "12", "19", "68", "62", "69", "82", "89", "29"]
+pairs = ["18", "12", "19", "68", "62", "69", "82", "89", "29"]
 pairs_named = [
-    "White-Asian",
     "White-Other",
     "White-Black",
     "White-Mixed",
@@ -109,7 +108,6 @@ for pair in tqdm(pairs):
 # %%
 # Plot AUC
 colors = [
-    "#1f77b4",
     "#ff7f0e",
     "#2ca02c",
     "#d62728",
