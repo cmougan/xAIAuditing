@@ -7,7 +7,6 @@ from xgboost import XGBClassifier, XGBRegressor
 import seaborn as sns
 import shap
 from sklearn.model_selection import train_test_split
-from fairtools.detector import shap_detector
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
@@ -16,7 +15,7 @@ from scipy.stats import wasserstein_distance
 plt.style.use("seaborn-whitegrid")
 # %%
 N = 5_000
-CASE_A = True
+CASE_A = False
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
