@@ -38,7 +38,7 @@ X_ = X.drop(["group"], axis=1)
 # Train on CA data
 cofs = []
 aucs = []
-for i in tqdm(range(100)):
+for i in tqdm(range(10)):
     # Bootstrap
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.632, random_state=i)
     # Random assign
@@ -57,7 +57,7 @@ for i in tqdm(range(100)):
     audit.fit(X_train, y_train, Z="group")
 
     # Save results
-    cofs.append(audit.get_coefs()[0])
+    cofs.append(audit.gmodel.steps[-1][1].coef_[0])
     aucs.append(audit.get_auc_val())
 
 # %%
@@ -86,15 +86,17 @@ for pair in tqdm(pairs):
     )
     ood_temp = []
     ood_coefs_temp = pd.DataFrame(columns=X.columns)
-    for i in range(100):
+    for i in range(10):
         X = X_.sample(frac=0.132, replace=True)
         y = y_[X.index]
+
         try:
             audit.fit(X, y, Z="group")
             ood_temp.append(audit.get_auc_val())
             ood_coefs_temp = ood_coefs_temp.append(
                 pd.DataFrame(
-                    audit.get_coefs(), columns=X.drop(["group"], axis=1).columns
+                    audit.gmodel.steps[-1][1].coef_,
+                    columns=X.drop(["group"], axis=1).columns,
                 )
             )
         except Exception as e:
@@ -148,7 +150,7 @@ coefs_res.sort_values(by="mean", ascending=True)
 # %%
 coefs_res.sort_values(by="mean", ascending=True).shape
 # %%
-from matplotlib.colors import LogNorm, PowerNorm
+from matplotlib.colors import PowerNorm
 
 plt.figure(figsize=(10, 6))
 plt.title("Feature importance of Explanation Audits")

@@ -33,12 +33,16 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
     # 0.5
     """
 
-    def __init__(self, model, gmodel, masker=True, space="explanation"):
+    def __init__(
+        self, model, gmodel, masker=False, space="explanation", algorithm: str = "auto"
+    ):
         self.model = model
         self.gmodel = gmodel
         self.explainer = None
         self.space = space
         self.masker = masker
+        self.algorithm = algorithm
+
         # Check if space is supported
         if self.space not in ["explanation", "input", "prediction"]:
             raise ValueError(
