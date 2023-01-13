@@ -40,6 +40,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         masker=False,
         space="explanation",
         algorithm: str = "auto",
+        feature_perturbation=None,
     ):
         self.model = model
         self.gmodel = gmodel
@@ -47,6 +48,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         self.space = space
         self.masker = masker
         self.algorithm = algorithm
+        self.feature_perturbation = None
 
         # Check if space is supported
         if self.space not in ["explanation", "input", "prediction"]:
@@ -93,7 +95,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
 
         return self.X_tr, self.X_val, self.X_te, self.y_tr, self.y_val, self.y_te
 
-    def fit(self, X, y, Z, **kwargs):
+    def fit(self, X, y, Z):
 
         # Check that X and y have correct shape
         check_X_y(X, y)
@@ -114,7 +116,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         self.fit_model(self.X_tr, self.y_tr)
 
         # Get explanations
-        self.S_val = self.get_explanations(self.X_val, **kwargs)
+        self.S_val = self.get_explanations(self.X_val)
 
         # Fit model G
         self.fit_audit_detector(self.S_val, self.Z_val)
@@ -143,22 +145,28 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
     def fit_audit_detector(self, X, y):
         self.gmodel.fit(X, y)
 
-    def get_explanations(self, X, data_masker=None, **kwargs):
+    def get_explanations(self, X, data_masker=None):
         if data_masker == None:
             data_masker = self.X_tr
         else:
             data_masker = data_masker
 
         if self.space == "explanation":
+
             if self.masker:
                 self.explainer = shap.Explainer(
-                    self.model, algorithm=self.algorithm, masker=data_masker, **kwargs
+                    self.model, algorithm=self.algorithm, masker=data_masker
                 )
             else:
-                self.explainer = shap.Explainer(
-                    self.model, algorithm=self.algorithm, **kwargs
+                self.explainer = shap.Explainer(self.model, algorithm=self.algorithm)
+            # Rewrite for the linear case
+            if self.algorithm == "linear":
+                self.explainer = shap.explainers.Linear(
+                    self.model,
+                    masker=data_masker,
+                    feature_perturbation=self.feature_perturbation,
+                    algorithm="linear",
                 )
-
             shap_values = self.explainer(X)
             # Name columns
             if isinstance(X, pd.DataFrame):
