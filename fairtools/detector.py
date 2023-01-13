@@ -34,7 +34,12 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
     """
 
     def __init__(
-        self, model, gmodel, masker=False, space="explanation", algorithm: str = "auto"
+        self,
+        model,
+        gmodel,
+        masker=False,
+        space="explanation",
+        algorithm: str = "auto",
     ):
         self.model = model
         self.gmodel = gmodel
@@ -88,7 +93,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
 
         return self.X_tr, self.X_val, self.X_te, self.y_tr, self.y_val, self.y_te
 
-    def fit(self, X, y, Z):
+    def fit(self, X, y, Z, **kwargs):
 
         # Check that X and y have correct shape
         check_X_y(X, y)
@@ -109,7 +114,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         self.fit_model(self.X_tr, self.y_tr)
 
         # Get explanations
-        self.S_val = self.get_explanations(self.X_val)
+        self.S_val = self.get_explanations(self.X_val, **kwargs)
 
         # Fit model G
         self.fit_audit_detector(self.S_val, self.Z_val)
@@ -138,7 +143,7 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
     def fit_audit_detector(self, X, y):
         self.gmodel.fit(X, y)
 
-    def get_explanations(self, X, data_masker=None):
+    def get_explanations(self, X, data_masker=None, **kwargs):
         if data_masker == None:
             data_masker = self.X_tr
         else:
@@ -147,10 +152,12 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         if self.space == "explanation":
             if self.masker:
                 self.explainer = shap.Explainer(
-                    self.model, algorithm=self.algorithm, masker=data_masker
+                    self.model, algorithm=self.algorithm, masker=data_masker, **kwargs
                 )
             else:
-                self.explainer = shap.Explainer(self.model, algorithm=self.algorithm)
+                self.explainer = shap.Explainer(
+                    self.model, algorithm=self.algorithm, **kwargs
+                )
 
             shap_values = self.explainer(X)
             # Name columns
