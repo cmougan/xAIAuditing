@@ -38,7 +38,7 @@ X_ = X.drop(["group"], axis=1)
 # Train on CA data
 cofs = []
 aucs = []
-for i in tqdm(range(10)):
+for i in tqdm(range(100)):
     # Bootstrap
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.632, random_state=i)
     # Random assign
@@ -86,8 +86,8 @@ for pair in tqdm(pairs):
     )
     ood_temp = []
     ood_coefs_temp = pd.DataFrame(columns=X.columns)
-    for i in range(10):
-        X = X_.sample(frac=0.132, replace=True)
+    for i in range(100):
+        X = X_.sample(frac=0.632, replace=True)
         y = y_[X.index]
 
         try:
