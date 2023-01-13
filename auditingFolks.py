@@ -164,25 +164,17 @@ plt.savefig("images/feature_importance.pdf", bbox_inches="tight")
 plt.savefig("images/feature_importance.png")
 plt.show()
 # %%
-# Global
-res = pd.DataFrame(
-    audit.get_coefs()[0], columns=["coef"], index=X.drop(["group"], axis=1).columns
-).sort_values("coef", ascending=False)
-plt.figure()
-plt.title("Global Feature Importance")
-plt.ylabel("Absolute value of regression coefficient")
-sns.barplot(x=res.index, y=res.coef.abs())
-plt.xticks(rotation=45)
-plt.savefig("images/folksglobal.pdf", bbox_inches="tight")
-plt.show()
-# Local
-plt.figure()
-plt.title("Local Feature Importance")
-plt.ylabel("Absolute value of regression coefficient")
-ind_coef = np.abs(X.drop(["group"], axis=1).iloc[40].values * audit.get_coefs()[0])
-sns.barplot(x=X.drop(["group"], axis=1).columns, y=ind_coef)
-plt.xticks(rotation=45)
-plt.savefig("images/folkslocal.pdf", bbox_inches="tight")
-plt.show()
+# Cluster map
+plt.figure(figsize=(10, 6))
+plt.title("Feature importance of Explanation Audits")
+sns.clustermap(
+    coefs_res.sort_values(by="mean", ascending=False),
+    annot=True,
+    norm=PowerNorm(gamma=0.5),
+)
 
+plt.tight_layout()
+plt.savefig("images/feature_importance_cluster.pdf", bbox_inches="tight")
+plt.savefig("images/feature_importance_cluster.png")
+plt.show()
 # %%
