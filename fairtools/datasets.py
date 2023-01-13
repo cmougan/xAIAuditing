@@ -24,6 +24,8 @@ d = {
     "COW": "ClassOfWorker",
     "WKHP": "WorkHours",
     "POBP": "PlaceOfBirth",
+    "SEX": "Sex",
+    "RELP": "Relp",
 }
 r = {
     1: "White alone",
