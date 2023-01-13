@@ -33,42 +33,17 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
     # 0.5
     """
 
-    def __init__(self, model, gmodel):
+    def __init__(self, model, gmodel, masker=True, space="explanation"):
         self.model = model
         self.gmodel = gmodel
         self.explainer = None
-
-        # Supported F Models
-        self.supported_tree_models = ["XGBClassifier", "XGBRegressor"]
-        self.supported_linear_models = [
-            "LogisticRegression",
-            "LinearRegression",
-            "Ridge",
-            "Lasso",
-        ]
-        self.supported_models = (
-            self.supported_tree_models + self.supported_linear_models
-        )
-        # Supported detectors
-        self.supported_linear_detectors = [
-            "LogisticRegression",
-        ]
-        self.supported_tree_detectors = ["XGBClassifier"]
-        self.supported_detectors = (
-            self.supported_linear_detectors + self.supported_tree_detectors
-        )
-
-        # Check if models are supported
-        if self.get_model_type() not in self.supported_models:
+        self.space = space
+        self.masker = masker
+        # Check if space is supported
+        if self.space not in ["explanation", "input", "prediction"]:
             raise ValueError(
-                "Model not supported. Supported models are: {} got {}".format(
-                    self.supported_models, self.model.__class__.__name__
-                )
-            )
-        if self.get_gmodel_type() not in self.supported_detectors:
-            raise ValueError(
-                "gmodel not supported. Supported models are: {} got {}".format(
-                    self.supported_detectors, self.gmodel.__class__.__name__
+                "space not supported. Supported spaces are: {} got {}".format(
+                    ["explanation", "input", "prediction"], self.space
                 )
             )
 
@@ -159,32 +134,55 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
     def fit_audit_detector(self, X, y):
         self.gmodel.fit(X, y)
 
-    def get_explanations(self, X):
-        # Determine the type of SHAP explainer to use
-        if self.get_model_type() in self.supported_tree_models:
-            self.explainer = shap.Explainer(self.model)
-        elif self.get_model_type() in self.supported_linear_models:
-            self.explainer = shap.LinearExplainer(
-                self.model, X, feature_dependence="correlation_dependent"
-            )
+    def get_explanations(self, X, data_masker=None):
+        if data_masker == None:
+            data_masker = self.X_tr
         else:
-            raise ValueError(
-                "Model not supported. Supported models are: {}, got {}".format(
-                    self.supported_models, self.model.__class__.__name__
+            data_masker = data_masker
+
+        if self.space == "explanation":
+            if self.masker:
+                self.explainer = shap.Explainer(
+                    self.model, algorithm=self.algorithm, masker=data_masker
                 )
+            else:
+                self.explainer = shap.Explainer(self.model, algorithm=self.algorithm)
+
+            shap_values = self.explainer(X)
+            # Name columns
+            if isinstance(X, pd.DataFrame):
+                columns_name = X.columns
+            else:
+                columns_name = ["Shap%d" % (i + 1) for i in range(X.shape[1])]
+
+            exp = pd.DataFrame(
+                data=shap_values.values,
+                columns=columns_name,
+            )
+        if self.space == "input":
+            shap_values = X
+            # Name columns
+            if isinstance(X, pd.DataFrame):
+                exp = X
+            else:
+                columns_name = ["Shap%d" % (i + 1) for i in range(X.shape[1])]
+
+                exp = pd.DataFrame(
+                    data=shap_values,
+                    columns=columns_name,
+                )
+        if self.space == "prediction":
+            try:
+                shap_values = self.model.predict_proba(X)[:, 1]
+            except:
+                shap_values = self.model.predict(X)
+
+            # Name columns
+            exp = pd.DataFrame(
+                data=shap_values,
+                columns=["preds"],
             )
 
-        shap_values = self.explainer(X)
-        # Name columns
-        if isinstance(X, pd.DataFrame):
-            columns_name = X.columns
-        else:
-            columns_name = ["Shap%d" % (i + 1) for i in range(X.shape[1])]
-
-        exp = pd.DataFrame(
-            data=shap_values.values,
-            columns=columns_name,
-        )
         return exp
 
     def get_auc_f_val(self):
