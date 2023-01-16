@@ -1,6 +1,13 @@
 import pandas as pd
 from sklearn.datasets import make_blobs
-from folktables import ACSDataSource, ACSTravelTime, ACSIncome
+from folktables import (
+    ACSDataSource,
+    ACSTravelTime,
+    ACSIncome,
+    ACSEmployment,
+    ACSMobility,
+    ACSPublicCoverage,
+)
 import numpy as np
 
 

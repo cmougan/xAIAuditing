@@ -31,8 +31,9 @@ random.seed(0)
 # %%
 
 # Load data
+dataset = "ACSIncome"
 data = GetData()
-X, y = data.get_state(year="2014", state="CA", verbose=True)
+X, y = data.get_state(year="2014", state="CA", verbose=True, data=dataset)
 X_ = X.drop(["group"], axis=1)
 # %%
 # Train on CA data
@@ -83,6 +84,8 @@ for pair in tqdm(pairs):
         year="2014",
         group1=int(pair[0]),
         group2=int(pair[1]),
+        verbose=True,
+        data=dataset,
     )
     ood_temp = []
     ood_coefs_temp = pd.DataFrame(columns=X.columns)
