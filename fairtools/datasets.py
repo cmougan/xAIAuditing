@@ -21,12 +21,17 @@ d = {
     "RAC1P": "Race",
     "AGEP": "Age",
     "POWPUMA": "WorkPlace",
-    "COW": "ClassOfWorker",
-    "WKHP": "WorkHours",
-    "POBP": "PlaceOfBirth",
     "SEX": "Sex",
-    "RELP": "Relp",
+    "RELP": "Relationship",
+    "POBP": "PlaceOfBirth",
+    "ANC": "Ancestry",
+    "MIL": "Military",
+    "DEYE": "VisionDiff",
+    "DEAR": "EaringDiff",
+    "DREAM": "CognitiveDiff",
+    "ESR": "EmploymentStatus",
 }
+
 r = {
     1: "White alone",
     2: "Black or African American alone",
