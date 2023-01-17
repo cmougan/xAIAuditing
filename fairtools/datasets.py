@@ -37,6 +37,7 @@ d = {
     "DEAR": "EaringDiff",
     "DREAM": "CognitiveDiff",
     "ESR": "EmploymentStatus",
+    "WKHP": "WorkedHours",
 }
 
 r = {
@@ -78,24 +79,32 @@ class GetData:
         self,
         year: str = "2014",
         state: str = "NY",
-        data: str = "ACSIncome",
+        datasets: str = "ACSIncome",
         group1: int = 6,
         group2: int = 8,
         verbose: str = False,
     ):
+        if datasets == "ACSTravelTime":
+            self.dataset = ACSTravelTime
+        elif datasets == "ACSEmployment":
+            self.dataset = ACSEmployment
+        elif datasets == "ACSIncome":
+            self.dataset = ACSIncome
+        elif datasets == "ACSMobility":
+            self.dataset = ACSMobility
+        elif datasets == "ACSPublicCoverage":
+            self.dataset = ACSPublicCoverage
 
         data_source = ACSDataSource(survey_year=year, horizon="1-Year", survey="person")
         try:
             acs_data = data_source.get_data(states=[state], download=False)
         except:
             acs_data = data_source.get_data(states=[state], download=True)
-        if data == "ACSIncome":
-            ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(acs_data)
-            ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features).rename(
-                columns=d
-            )
-        else:
-            raise NotImplementedError
+
+        ca_features, ca_labels, ca_group = self.dataset.df_to_numpy(acs_data)
+        ca_features = pd.DataFrame(ca_features, columns=self.dataset.features).rename(
+            columns=d
+        )
 
         # Filter to only have groups 1 and 2
         ca_features["group"] = ca_group

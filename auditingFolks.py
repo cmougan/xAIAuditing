@@ -31,15 +31,16 @@ random.seed(0)
 # %%
 
 # Load data
-dataset = "ACSIncome"
+dataset = "ACSMobility"
+N_b = 20
 data = GetData()
-X, y = data.get_state(year="2014", state="CA", verbose=True, data=dataset)
+X, y = data.get_state(year="2014", state="CA", verbose=True, datasets=dataset)
 X_ = X.drop(["group"], axis=1)
 # %%
 # Train on CA data
 cofs = []
 aucs = []
-for i in tqdm(range(100)):
+for i in tqdm(range(N_b)):
     # Bootstrap
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.632, random_state=i)
     # Random assign
@@ -85,11 +86,11 @@ for pair in tqdm(pairs):
         group1=int(pair[0]),
         group2=int(pair[1]),
         verbose=True,
-        data=dataset,
+        datasets=dataset,
     )
     ood_temp = []
     ood_coefs_temp = pd.DataFrame(columns=X.columns)
-    for i in range(100):
+    for i in range(N_b):
         X = X_.sample(frac=0.632, replace=True)
         y = y_[X.index]
 
@@ -132,12 +133,16 @@ for i, value in enumerate(pairs):
     sns.kdeplot(ood_auc[value], label=pairs_named[i], color=colors[i], fill=True)
 plt.legend()
 plt.tight_layout()
-plt.savefig("images/detector_auc.png")
+plt.savefig("images/detector_auc_{}.png".format(dataset))
 plt.show()
 
 # %%
 # Analysis of coeficients
 coefs = pd.DataFrame(cofs, columns=X.drop(["group"], axis=1).columns)
+if "State" in coefs.columns:
+    coefs = coefs.drop(["State"], axis=1)
+if "NATIVITY" in coefs.columns:
+    coefs = coefs.drop(["NATIVITY"], axis=1)
 coefs_res = pd.DataFrame(index=coefs.columns)
 # for i in range(len(ood_coefs)):
 #    coefs_res[pairs_named[i]] = np.mean(cofs <= ood_coefs[i], axis=0)
@@ -163,8 +168,8 @@ sns.heatmap(
     norm=PowerNorm(gamma=0.5),
 )
 plt.tight_layout()
-plt.savefig("images/feature_importance.pdf", bbox_inches="tight")
-plt.savefig("images/feature_importance.png")
+plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
+plt.savefig("images/feature_importance_{}.png".format(dataset))
 plt.show()
 # %%
 # Cluster map
@@ -177,7 +182,9 @@ sns.clustermap(
 )
 
 plt.tight_layout()
-plt.savefig("images/feature_importance_cluster.pdf", bbox_inches="tight")
-plt.savefig("images/feature_importance_cluster.png")
+plt.savefig(
+    "images/feature_importance_cluster_{}.pdf".format(dataset), bbox_inches="tight"
+)
+plt.savefig("images/feature_importance_cluster_{}.png".format(dataset))
 plt.show()
 # %%
