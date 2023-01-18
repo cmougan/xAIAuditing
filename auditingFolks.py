@@ -31,10 +31,10 @@ random.seed(0)
 # %%
 
 # Load data
-dataset = "ACSMobility"
+dataset = "ACSEmployment"
 N_b = 20
 data = GetData()
-X, y = data.get_state(year="2014", state="CA", verbose=True, datasets=dataset)
+X, y = data.get_state(year="2014", state="HI", verbose=True, datasets=dataset)
 X_ = X.drop(["group"], axis=1)
 # %%
 # Train on CA data
@@ -125,7 +125,7 @@ colors = [
     "#17becf",
 ]
 plt.figure(figsize=(10, 6))
-plt.title("AUC performance of the Discrimination Auditor")
+plt.title("AUC performance of the Demographic Parity Inspector")
 plt.xlabel("AUC")
 sns.kdeplot(aucs, fill=True, label="Randomly assigned groups")
 for i, value in enumerate(pairs):
@@ -174,7 +174,7 @@ plt.show()
 # %%
 # Cluster map
 plt.figure(figsize=(10, 6))
-plt.title("Feature importance of Explanation Audits")
+plt.title("Feature importance of Demographic Parity Inspector")
 sns.clustermap(
     coefs_res.sort_values(by="mean", ascending=False),
     annot=True,
