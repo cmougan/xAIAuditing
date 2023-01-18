@@ -38,6 +38,7 @@ d = {
     "DREAM": "CognitiveDiff",
     "ESR": "EmploymentStatus",
     "WKHP": "WorkedHours",
+    "COW": "ClassOfWorker",
 }
 
 r = {
