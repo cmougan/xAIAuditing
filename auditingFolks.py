@@ -31,10 +31,12 @@ random.seed(0)
 # %%
 
 # Load data
-dataset = "ACSEmployment"
+dataset = "ACSIncome"
+state = "PR"
+year = "2014"
 N_b = 20
 data = GetData()
-X, y = data.get_state(year="2014", state="HI", verbose=True, datasets=dataset)
+X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
 X_ = X.drop(["group"], axis=1)
 # %%
 # Train on CA data
@@ -81,8 +83,8 @@ pairs_named = [
 
 for pair in tqdm(pairs):
     X_, y_ = data.get_state(
-        state="CA",
-        year="2014",
+        state=state,
+        year=year,
         group1=int(pair[0]),
         group2=int(pair[1]),
         verbose=True,
@@ -161,7 +163,7 @@ coefs_res.sort_values(by="mean", ascending=True).shape
 from matplotlib.colors import PowerNorm
 
 plt.figure(figsize=(10, 6))
-plt.title("Feature importance of Explanation Audits")
+plt.title("Feature importance for Demographic Parity Inspector")
 sns.heatmap(
     coefs_res.sort_values(by="mean", ascending=False),
     annot=True,
