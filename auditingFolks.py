@@ -31,7 +31,11 @@ random.seed(0)
 # %%
 
 # Load data
-dataset = "ACSIncome"
+try:
+    dataset = sys.argv[1]
+except:
+    dataset = "ACSIncome"
+print("Dataset:", dataset)
 state = "CA"
 year = "2014"
 N_b = 10
