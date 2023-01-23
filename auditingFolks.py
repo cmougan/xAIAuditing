@@ -38,7 +38,7 @@ except:
 print("Dataset:", dataset)
 state = "CA"
 year = "2014"
-N_b = 10
+N_b = 20
 data = GetData()
 X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
 X_ = X.drop(["group"], axis=1)
