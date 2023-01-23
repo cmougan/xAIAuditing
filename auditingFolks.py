@@ -32,9 +32,9 @@ random.seed(0)
 
 # Load data
 dataset = "ACSIncome"
-state = "PR"
+state = "CA"
 year = "2014"
-N_b = 20
+N_b = 10
 data = GetData()
 X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
 X_ = X.drop(["group"], axis=1)
@@ -155,38 +155,18 @@ for i, pair in enumerate(pairs):
             ood_coefs[pair][col], coefs[col]
         )
 # %%
-coefs_res["mean"] = coefs_res.mean(axis=1)
-coefs_res.sort_values(by="mean", ascending=True)
-# %%
-coefs_res.sort_values(by="mean", ascending=True).shape
-# %%
-from matplotlib.colors import PowerNorm
-
-plt.figure(figsize=(10, 6))
-plt.title("Feature importance for Demographic Parity Inspector")
-sns.heatmap(
-    coefs_res.sort_values(by="mean", ascending=False),
-    annot=True,
-    norm=PowerNorm(gamma=0.5),
-)
-plt.tight_layout()
-plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
-plt.savefig("images/feature_importance_{}.png".format(dataset))
-plt.show()
-# %%
-# Cluster map
 plt.figure(figsize=(10, 6))
 plt.title("Feature importance of Demographic Parity Inspector")
-sns.clustermap(
-    coefs_res.sort_values(by="mean", ascending=False),
+cg = sns.clustermap(
+    coefs_res,
     annot=True,
     norm=PowerNorm(gamma=0.5),
 )
-
+cg.ax_row_dendrogram.set_visible(False)
+cg.ax_col_dendrogram.set_visible(False)
+cg.cax.set_visible(False)
 plt.tight_layout()
-plt.savefig(
-    "images/feature_importance_cluster_{}.pdf".format(dataset), bbox_inches="tight"
-)
-plt.savefig("images/feature_importance_cluster_{}.png".format(dataset))
+plt.savefig("images/feature_importance_{}.png".format(dataset))
+plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
 plt.show()
 # %%
