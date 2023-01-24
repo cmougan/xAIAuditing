@@ -3,13 +3,16 @@ import warnings
 from fairtools.detector import ExplanationAudit
 from fairtools.datasets import GetData
 from tqdm import tqdm
+import sys
 
 warnings.filterwarnings("ignore")
 
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import PowerNorm
 
 sns.set_style("whitegrid")
+sns.set(rc={"figure.figsize": (10, 6)})
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -33,7 +36,10 @@ random.seed(0)
 # Load data
 try:
     dataset = sys.argv[1]
-except:
+except Exception as e:
+    # Print error
+    print("Error:", e)
+    print("No dataset specified, using ACSIncome")
     dataset = "ACSIncome"
 print("Dataset:", dataset)
 state = "CA"
@@ -160,7 +166,6 @@ for i, pair in enumerate(pairs):
         )
 # %%
 plt.figure(figsize=(10, 6))
-plt.title("Feature importance of Demographic Parity Inspector")
 cg = sns.clustermap(
     coefs_res,
     annot=True,
@@ -169,8 +174,8 @@ cg = sns.clustermap(
 cg.ax_row_dendrogram.set_visible(False)
 cg.ax_col_dendrogram.set_visible(False)
 cg.cax.set_visible(False)
+cg.fig.suptitle("Feature importance of Demographic Parity Inspector")
 plt.tight_layout()
 plt.savefig("images/feature_importance_{}.png".format(dataset))
 plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
 plt.show()
-# %%

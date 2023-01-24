@@ -21,6 +21,7 @@ run_script:
 	jupyter nbconvert --to script Models.ipynb
 	python Models.py
 gitall:
+	python -m black .
 	git add .
 	@read -p "Enter commit message: " message; 	git commit -m "$$message"
 	git push
@@ -38,8 +39,8 @@ clean_results:
 	find results/ -name "*.csv" -type f -print0 | xargs -0 /bin/rm -f
 
 run_all_datasets:
-	python auditingFolks.py ACSTravelTime
 	python auditingFolks.py ACSIncome
+	python auditingFolks.py ACSTravelTime
 	python auditingFolks.py ACSEmployment
 	python auditingFolks.py ACSMobility
 	python auditingFolks.py ACSPublicCoverage
