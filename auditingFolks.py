@@ -12,7 +12,6 @@ import seaborn as sns
 from matplotlib.colors import PowerNorm
 
 sns.set_style("whitegrid")
-sns.set(rc={"figure.figsize": (10, 6)})
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -147,7 +146,6 @@ for i, value in enumerate(pairs):
 plt.legend()
 plt.tight_layout()
 plt.savefig("images/detector_auc_{}.png".format(dataset))
-plt.show()
 plt.close()
 
 # %%
@@ -184,5 +182,5 @@ sns.heatmap(
 )
 plt.tight_layout()
 plt.savefig("images/feature_importance_{}.png".format(dataset))
-plt.show()
+plt.close()
 # %%
