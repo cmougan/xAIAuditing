@@ -34,19 +34,20 @@ random.seed(0)
 # %%
 
 # Load data
+state = "CA"
+year = "2014"
+N_b = 20
+data = GetData()
 try:
     dataset = sys.argv[1]
+    X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
 except Exception as e:
     # Print error
     print("Error:", e)
     print("No dataset specified, using ACSIncome")
     dataset = "ACSIncome"
+    X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
 print("Dataset:", dataset)
-state = "CA"
-year = "2014"
-N_b = 20
-data = GetData()
-X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
 X_ = X.drop(["group"], axis=1)
 # %%
 # Train on CA data
@@ -147,6 +148,7 @@ plt.legend()
 plt.tight_layout()
 plt.savefig("images/detector_auc_{}.png".format(dataset))
 plt.show()
+plt.close()
 
 # %%
 # Analysis of coeficients
@@ -165,17 +167,22 @@ for i, pair in enumerate(pairs):
             ood_coefs[pair][col], coefs[col]
         )
 # %%
+# Means on both axis
+coefs_res["mean"] = coefs_res.mean(axis=1)
+coefs_res.loc["mean"] = coefs_res.mean(axis=0)
+coefs_res.sort_values(by="mean", ascending=True)
+# %%
 plt.figure(figsize=(10, 6))
-cg = sns.clustermap(
-    coefs_res,
+plt.title("Feature importance of Explanation Audits")
+sns.heatmap(
+    coefs_res.sort_values(by="mean", ascending=False, axis=0)
+    .sort_values(by="mean", ascending=False, axis=1)
+    .drop(["mean"], axis=1)
+    .drop(["mean"], axis=0),
     annot=True,
     norm=PowerNorm(gamma=0.5),
 )
-cg.ax_row_dendrogram.set_visible(False)
-cg.ax_col_dendrogram.set_visible(False)
-cg.cax.set_visible(False)
-cg.fig.suptitle("Feature importance of Demographic Parity Inspector")
 plt.tight_layout()
 plt.savefig("images/feature_importance_{}.png".format(dataset))
-plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
 plt.show()
+# %%
