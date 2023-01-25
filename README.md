@@ -1,17 +1,14 @@
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg?style=plastic)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?color=g&style=plastic)](https://opensource.org/licenses/MIT)
 
-# Discrimination Audits via the Explanation Space
+# Demographic Parity Inspector: Fairness Audits via the Explanation Space
 
 
 This repository contains the code for the paper Discrimination Audits via the Explanation Space, which is available on ...
 
-
-
-
 To run the code, you need to install the packages listed in `requirements_tutorial.txt`. The code is written in Python 3.10
 ```python
-from nobias import ExplanationAudit
+from fairtools.detector import ExplanationAudit
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -47,7 +44,7 @@ detector.get_auc_val()
 #0.73
 ```
 ```python
-coefs = detector.get_coefs()
+coefs = detector.gmodel.coef_[0]
 coefs = pd.DataFrame(coefs, index=X.columns[:-1], columns=["coef"]).sort_values("coef", ascending=False)
 coefs.plot(kind="bar")
 ```

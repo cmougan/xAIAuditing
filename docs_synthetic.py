@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBRegressor
-from nobias import ExplanationAudit
+from fairtools.detector import ExplanationAudit
 
 # %%
 N = 10_000
@@ -22,7 +22,7 @@ detector = ExplanationAudit(model=XGBRegressor(), gmodel=LogisticRegression())
 detector.fit(X, y, Z="var4")
 detector.get_auc_val()
 # %%
-coefs = detector.get_coefs()
+coefs = detector.gmodel.coef_[0]
 coefs = pd.DataFrame(coefs, index=X.columns[:-1], columns=["coef"]).sort_values(
     "coef", ascending=False
 )

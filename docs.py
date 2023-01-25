@@ -25,7 +25,7 @@ detector.fit(X, y, Z="RAC1P")
 # %%
 detector.get_auc_val()
 # %%
-coefs = detector.get_coefs()
+coefs = detector.gmodel.coef_[0]
 coefs = pd.DataFrame(coefs, index=X.columns[:-1], columns=["coef"]).sort_values(
     "coef", ascending=False
 )
