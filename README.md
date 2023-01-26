@@ -2,9 +2,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?color=g&style=plastic)](https://opensource.org/licenses/MIT)
 
 # Demographic Parity Inspector: Fairness Audits via the Explanation Space
+>Even if deployed with the best intentions, machine learning methods can perpetuate, amplify or even create social biases. Measures of
+(un)fairness has been proposed as a way to gauge the (non)discriminatory nature of machine learning models. 
+However, proxies of protected attributes causing discriminatory effects remain challenging to address. In this work, we propose a  new algorithmic approach that measures group-wise demographic parity violations and allows us to inspect the causes of inter-group discrimination. Our method relies on the novel idea of measuring the dependence of a model on the protected attribute based on the explanation space, an informative space that allows for more sensitive audits than the primary space of input data or prediction distributions, and allowing for the assertion of theoretical demographic parity auditing guarantees. We provide  a mathematical analysis, synthetic examples, and experimental evaluation of real-world data. We release an open-source Python package with methods, routines, and tutorials.
 
 
-This repository contains the code for the paper Discrimination Audits via the Explanation Space, which is available on ...
+<p align="center">
+  <img width="300" src="images/flowchart.png" />
+</p>
+
 
 To run the code, you need to install the packages listed in `requirements_tutorial.txt`. The code is written in Python 3.10
 ```python
@@ -50,7 +56,7 @@ coefs.plot(kind="bar")
 ```
 
 <p align="center">
-  <img width="616" src="https://raw.githubusercontent.com/cmougan/xAIAuditing/master/images/coefs_synth.png" />
+  <img width="616" src="images/coefs_synth.png" />
 </p>
 
 ## Tutorial on Real Dataset
@@ -85,5 +91,5 @@ coefs.plot(kind="bar")
 ```
 
 <p align="center">
-  <img width="616" src="https://raw.githubusercontent.com/cmougan/xAIAuditing/master/images/coefs_real.png" />
+  <img width="616" src="images/coefs_real.png" />
 </p>
