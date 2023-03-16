@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-03-16T18:57:30.779Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36" etag="qkEwDPhT5CYZ-mmc7VBf" version="21.0.6" type="github">
+<mxfile host="app.diagrams.net" modified="2023-03-16T18:59:40.022Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36" etag="l5SPilWmVpYi34lOsqqZ" version="21.0.6" type="github">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
     <mxGraphModel dx="954" dy="616" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -53,16 +53,22 @@
           <mxGeometry x="480" y="260" width="80" height="80" as="geometry" />
         </mxCell>
         <mxCell id="CERsI-dbUr9vtdzJt2CL-15" value="ID Model Behaviour" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="600" y="270" width="120" height="60" as="geometry" />
+          <mxGeometry x="605" y="270" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="CERsI-dbUr9vtdzJt2CL-21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="CERsI-dbUr9vtdzJt2CL-18" target="CERsI-dbUr9vtdzJt2CL-20">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="CERsI-dbUr9vtdzJt2CL-18" value="OOD Model Behaviour" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="318" y="270" width="132" height="60" as="geometry" />
+          <mxGeometry x="309" y="270" width="132" height="60" as="geometry" />
         </mxCell>
         <mxCell id="CERsI-dbUr9vtdzJt2CL-20" value="Explain&lt;br&gt;Explanation Shift Detector" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
           <mxGeometry x="130" y="280" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-23" value="&lt;font color=&quot;#00cc00&quot;&gt;True&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="548" y="279" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-24" value="&lt;font color=&quot;#ff0000&quot;&gt;False&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="436" y="279" width="60" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
