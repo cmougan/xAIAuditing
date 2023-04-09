@@ -137,7 +137,7 @@ colors = [
     "#17becf",
 ]
 plt.figure(figsize=(10, 6))
-plt.title("AUC performance of the Demographic Parity Inspector")
+plt.title("AUC performance of the Equal Treatment Inspector")
 plt.xlabel("AUC")
 sns.kdeplot(aucs, fill=True, label="Randomly assigned groups")
 for i, value in enumerate(pairs):
