@@ -145,7 +145,7 @@ for i, value in enumerate(pairs):
     sns.kdeplot(ood_auc[value], label=pairs_named[i], color=colors[i], fill=True)
 plt.legend()
 plt.tight_layout()
-plt.savefig("images/detector_auc_{}.png".format(dataset))
+plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
 plt.close()
 
 # %%
@@ -181,6 +181,6 @@ sns.heatmap(
     norm=PowerNorm(gamma=0.5),
 )
 plt.tight_layout()
-plt.savefig("images/feature_importance_{}.png".format(dataset))
+plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
 plt.close()
 # %%
