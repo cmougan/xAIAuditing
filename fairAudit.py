@@ -15,7 +15,7 @@ from scipy.stats import wasserstein_distance
 plt.style.use("seaborn-whitegrid")
 # %%
 N = 5_000
-CASE_A = False
+CASE_A = True
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
@@ -125,22 +125,31 @@ df = pd.DataFrame(
 )
 plt.figure()
 if CASE_A:
-    plt.title("Demographic parity on the data and model")
+    plt.title("Bias on the data and model")
 else:
-    plt.title("Demographic parity on the data but not model")
+    plt.title("Bias on the data but not model")
+# Explanation Space
 plt.plot(
     df["gamma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
 )
+
+# Input Space
 plt.plot(df["gamma"], df["Input Space"] * 0.99, label="Input Space", marker=".")
+
+# Output Space
 plt.plot(df["gamma"], df["Output Space"], label="Output Space")
+
+# Input+Output Space
 plt.plot(df["gamma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
+
+
 plt.legend()
 plt.ylabel("AUC")
 plt.xlabel("gamma")
 if CASE_A:
-    plt.savefig("images/fairAuditSyntheticCaseA.png")
+    plt.savefig("images/fairAuditSyntheticCaseA.pdf", bbox_inches="tight")
 else:
-    plt.savefig("images/fairAuditSyntheticCaseB.png")
+    plt.savefig("images/fairAuditSyntheticCaseB.pdf", bbox_inches="tight")
 plt.show()
 # %%
 plt.figure()
