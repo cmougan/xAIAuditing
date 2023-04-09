@@ -132,17 +132,12 @@ else:
 plt.plot(
     df["gamma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
 )
-
 # Input Space
 plt.plot(df["gamma"], df["Input Space"] * 0.99, label="Input Space", marker=".")
-
 # Output Space
 plt.plot(df["gamma"], df["Output Space"], label="Output Space")
-
 # Input+Output Space
 plt.plot(df["gamma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
-
-
 plt.legend()
 plt.ylabel("AUC")
 plt.xlabel("gamma")
@@ -170,5 +165,3 @@ shap.plots.waterfall(shap_values[0], show=False)
 plt.tight_layout()
 plt.savefig("images/explainingFairnessAuditLocal.png")
 plt.show()
-
-# %%
