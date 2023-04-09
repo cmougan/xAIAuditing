@@ -165,3 +165,4 @@ shap.plots.waterfall(shap_values[0], show=False)
 plt.tight_layout()
 plt.savefig("images/explainingFairnessAuditLocal.png")
 plt.show()
+# %%
