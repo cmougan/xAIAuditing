@@ -96,7 +96,6 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
         return self.X_tr, self.X_val, self.X_te, self.y_tr, self.y_val, self.y_te
 
     def fit(self, X, y, Z):
-
         # Check that X and y have correct shape
         check_X_y(X, y)
         self.Z = Z
@@ -152,7 +151,6 @@ class ExplanationAudit(BaseEstimator, ClassifierMixin):
             data_masker = data_masker
 
         if self.space == "explanation":
-
             if self.masker:
                 self.explainer = shap.Explainer(
                     self.model, algorithm=self.algorithm, masker=data_masker

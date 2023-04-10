@@ -35,7 +35,6 @@ for error in ["performance", "fairness_one", "fairness_two"]:
     aux = df[df["error_type"] == error]
 # %%
 for error in ["performance", "fairness_one", "fairness_two"]:
-
     aux = (
         pd.pivot_table(
             df[df["error_type"] == error],

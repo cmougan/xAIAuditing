@@ -4,6 +4,7 @@ from fairtools.detector import ExplanationAudit
 from fairtools.datasets import GetData
 from tqdm import tqdm
 import sys
+import lightgbm as lgb
 
 warnings.filterwarnings("ignore")
 
@@ -71,17 +72,21 @@ dt_list = []
 dt_param = np.linspace(1, 10, 9)
 for i in tqdm(dt_param):
     audit = ExplanationAudit(
-        model=DecisionTreeClassifier(max_depth=int(i)), gmodel=LogisticRegression()
+        model=DecisionTreeRegressor(max_depth=int(i)), gmodel=LogisticRegression()
     )
     audit.fit(X, y, Z="group")
     dt_list.append(audit.get_auc_val())
-
+# %%
 # Random Forest
 rf_list = []
 rf_param = np.linspace(1, 10, 10)
 for i in tqdm(rf_param):
     audit = ExplanationAudit(
-        model=RandomForestRegressor(n_estimators=int(i), max_features=int(i)),
+        model=lgb.LGBMRegressor(
+            # boosting_type="rf",
+            n_estimators=int(i),
+            max_depth=int(i),
+        ),
         gmodel=LogisticRegression(),
     )
     audit.fit(X, y, Z="group")
@@ -130,7 +135,7 @@ dt_list = []
 dt_param = np.linspace(1, 10, 9)
 for i in tqdm(dt_param):
     audit = ExplanationAudit(
-        model=DecisionTreeClassifier(max_depth=int(i)), gmodel=XGBClassifier()
+        model=DecisionTreeRegressor(max_depth=int(i)), gmodel=XGBClassifier()
     )
     audit.fit(X, y, Z="group")
     dt_list.append(audit.get_auc_val())
@@ -140,7 +145,11 @@ rf_list = []
 rf_param = np.linspace(1, 10, 10)
 for i in tqdm(rf_param):
     audit = ExplanationAudit(
-        model=RandomForestRegressor(n_estimators=int(i), max_depth=int(i)),
+        model=lgb.LGBMRegressor(
+            # boosting_type="rf",
+            n_estimators=int(i),
+            max_depth=int(i),
+        ),
         gmodel=XGBClassifier(),
     )
     audit.fit(X, y, Z="group")

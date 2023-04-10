@@ -13,6 +13,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 np.random.seed(101)
+
+
 # %%
 def random_logit(x):
     z = 1.0 / (1 + np.exp(-x))
