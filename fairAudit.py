@@ -124,10 +124,9 @@ df = pd.DataFrame(
     ],
 )
 plt.figure()
-if CASE_A:
-    plt.title("Bias on the data and model")
-else:
-    plt.title("Bias on the data but not model")
+plt.title("{} Case".format("Indirect" if CASE_A else "Uninformative"))
+
+
 # Explanation Space
 plt.plot(
     df["gamma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
