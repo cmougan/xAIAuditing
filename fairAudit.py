@@ -13,6 +13,14 @@ import matplotlib.pyplot as plt
 from scipy.stats import wasserstein_distance
 
 plt.style.use("seaborn-whitegrid")
+from matplotlib import rcParams
+
+rcParams["axes.labelsize"] = 14
+rcParams["xtick.labelsize"] = 12
+rcParams["ytick.labelsize"] = 12
+rcParams["figure.figsize"] = 16, 8
+rcParams.update({"font.size": 22})
+
 # %%
 N = 5_000
 CASE_A = True

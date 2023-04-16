@@ -12,7 +12,15 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.colors import PowerNorm
 
-sns.set_style("whitegrid")
+plt.style.use("seaborn-whitegrid")
+from matplotlib import rcParams
+
+rcParams["axes.labelsize"] = 14
+rcParams["xtick.labelsize"] = 12
+rcParams["ytick.labelsize"] = 12
+rcParams["figure.figsize"] = 16, 8
+rcParams.update({"font.size": 22})
+
 import numpy as np
 import random
 import matplotlib.pyplot as plt

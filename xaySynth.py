@@ -14,6 +14,14 @@ from scipy.stats import wasserstein_distance
 from nobias import ExplanationAudit
 
 plt.style.use("seaborn-whitegrid")
+from matplotlib import rcParams
+
+rcParams["axes.labelsize"] = 14
+rcParams["xtick.labelsize"] = 12
+rcParams["ytick.labelsize"] = 12
+rcParams["figure.figsize"] = 16, 8
+rcParams.update({"font.size": 22})
+
 # %%
 # TODO -- Add two variables that contribute.
 N = 5_000
