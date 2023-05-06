@@ -8,7 +8,7 @@ However, proxies of protected attributes causing discriminatory effects remain c
 
 
 <p align="center">
-  <img width="300" src="images/flowchart.png" />
+  <img width="600" src="images/DPI.drawio.png" />
 </p>
 
 
