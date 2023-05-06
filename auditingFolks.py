@@ -4,11 +4,13 @@ from fairtools.detector import ExplanationAudit
 from fairtools.datasets import GetData
 from tqdm import tqdm
 import sys
+from scipy.stats import brunnermunzel
 
 warnings.filterwarnings("ignore")
 
 import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 
 plt.style.use("seaborn-whitegrid")
@@ -22,7 +24,7 @@ rcParams.update({"font.size": 22})
 
 import numpy as np
 import random
-import matplotlib.pyplot as plt
+
 from scipy.stats import wasserstein_distance
 
 # Scikit-Learn
@@ -30,6 +32,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import roc_auc_score
 
 
 # Specific packages
@@ -38,12 +41,33 @@ from xgboost import XGBRegressor
 # Seeding
 np.random.seed(0)
 random.seed(0)
-# %%
 
+
+# %%
+def roc_auc_ci(y_true, y_score, positive=1):
+    AUC = roc_auc_score(y_true, y_score)
+    N1 = sum(y_true == positive)
+    N2 = sum(y_true != positive)
+    Q1 = AUC / (2 - AUC)
+    Q2 = 2 * AUC**2 / (1 + AUC)
+    SE_AUC = np.sqrt(
+        (AUC * (1 - AUC) + (N1 - 1) * (Q1 - AUC**2) + (N2 - 1) * (Q2 - AUC**2))
+        / (N1 * N2)
+    )
+    lower = AUC - 1.96 * SE_AUC
+    upper = AUC + 1.96 * SE_AUC
+    if lower < 0:
+        lower = 0
+    if upper > 1:
+        upper = 1
+    return (lower, upper)
+
+
+# %%
 # Load data
 state = "CA"
 year = "2014"
-N_b = 20
+N_b = 2
 data = GetData()
 try:
     dataset = sys.argv[1]
@@ -82,6 +106,7 @@ for i in tqdm(range(N_b)):
     cofs.append(audit.gmodel.steps[-1][1].coef_[0])
     aucs.append(audit.get_auc_val())
 
+
 # %%
 ## OOD AUC
 ood_auc = {}
@@ -98,6 +123,7 @@ pairs_named = [
     "Other-Mixed",
     "Black-Mixed",
 ]
+aucs_test = []
 
 for pair in tqdm(pairs):
     X_, y_ = data.get_state(
@@ -123,9 +149,29 @@ for pair in tqdm(pairs):
                     columns=X.drop(["group"], axis=1).columns,
                 )
             )
+
         except Exception as e:
             print("Error with pair", pair)
             print(e)
+
+    # Statistical Test Analysis
+    gA = X[X["group"] == 0].drop(["group"], axis=1)
+    gB = X[X["group"] == 1].drop(["group"], axis=1)
+    pA = audit.predict_proba(gA)[:, 0]
+    pB = audit.predict_proba(gB)[:, 0]
+    brunnermunzel(pA, pB)
+
+    low, high = roc_auc_ci(X["group"], audit.predict(X))
+    aucs_test.append(
+        [
+            pair,
+            roc_auc_score(X["group"], audit.predict(X)),
+            low,
+            high,
+            brunnermunzel(pA, pB).pvalue,
+            brunnermunzel(pA, pB).statistic,
+        ]
+    )
 
     ood_auc[pair] = ood_temp
     ood_coefs[pair] = ood_coefs_temp
@@ -191,4 +237,11 @@ sns.heatmap(
 plt.tight_layout()
 plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
 plt.close()
+# %%
+auc_test = pd.DataFrame(
+    aucs_test, columns=["pair", "auc", "low", "high", "pvalue", "statistic"]
+)
+# %%
+auc_test
+
 # %%
