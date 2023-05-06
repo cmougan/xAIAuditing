@@ -1,6 +1,6 @@
 # %%
 import warnings
-from fairtools.detector import ExplanationAudit
+from explanationspace import ExplanationAudit
 from fairtools.datasets import GetData
 from tqdm import tqdm
 import sys
@@ -68,6 +68,7 @@ def roc_auc_ci(y_true, y_score, positive=1):
 state = "CA"
 year = "2014"
 N_b = 2
+boots_size = 0.132
 data = GetData()
 try:
     dataset = sys.argv[1]
@@ -84,11 +85,19 @@ X_ = X.drop(["group"], axis=1)
 # Train on CA data
 cofs = []
 aucs = []
+aucs_test = []
 for i in tqdm(range(N_b)):
     # Bootstrap
-    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.632, random_state=i)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=boots_size, random_state=i
+    )
     # Random assign
     X_train["group"] = np.random.randint(0, 2, X_train.shape[0])
+    Z_train = X_train["group"]
+    X_train = X_train.drop(["group"], axis=1)
+    X_test["group"] = np.random.randint(0, 2, X_test.shape[0])
+    Z_test = X_test["group"]
+    X_test = X_test.drop(["group"], axis=1)
 
     # Train model
     audit = ExplanationAudit(
@@ -100,11 +109,30 @@ for i in tqdm(range(N_b)):
             ]
         ),
     )
-    audit.fit(X_train, y_train, Z="group")
+    audit.fit_pipeline(X=X_train, y=y_train, z=Z_train)
 
     # Save results
-    cofs.append(audit.gmodel.steps[-1][1].coef_[0])
-    aucs.append(audit.get_auc_val())
+    cofs.append(audit.inspector.steps[-1][1].coef_[0])
+    aucs.append(roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1]))
+
+    # Statistical Test Analysis
+    gA = X_test[Z_test == 0]
+    gB = X_test[Z_test == 1]
+    pA = audit.predict_proba(gA)[:, 1]
+    pB = audit.predict_proba(gB)[:, 1]
+    auc = roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1])
+
+    low, high = roc_auc_ci(Z_test, audit.predict(X_test)[:, 1])
+    aucs_test.append(
+        [
+            0,
+            auc,
+            low,
+            high,
+            brunnermunzel(pA, pB).pvalue,
+            brunnermunzel(pA, pB).statistic,
+        ]
+    )
 
 
 # %%
@@ -123,7 +151,6 @@ pairs_named = [
     "Other-Mixed",
     "Black-Mixed",
 ]
-aucs_test = []
 
 for pair in tqdm(pairs):
     X_, y_ = data.get_state(
@@ -134,18 +161,26 @@ for pair in tqdm(pairs):
         verbose=True,
         datasets=dataset,
     )
+    X_["label"] = y_
     ood_temp = []
     ood_coefs_temp = pd.DataFrame(columns=X.columns)
     for i in range(N_b):
-        X = X_.sample(frac=0.632, replace=True)
-        y = y_[X.index]
+        # Train test split X,Y,Z
+        X_train = X_.sample(frac=boots_size, replace=True)
+        y_train = X_train["label"]
+        Z_train = X_train["group"]
+        X_train = X_train.drop(["label", "group"], axis=1)
+        X_test = X_.drop(X_train.index)
+        y_test = X_test["label"]
+        Z_test = X_test["group"]
+        X_test = X_test.drop(["label", "group"], axis=1)
 
         try:
-            audit.fit(X, y, Z="group")
-            ood_temp.append(audit.get_auc_val())
+            audit.fit_pipeline(X=X_train, y=y_train, z=Z_train)
+            ood_temp.append(roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1]))
             ood_coefs_temp = ood_coefs_temp.append(
                 pd.DataFrame(
-                    audit.gmodel.steps[-1][1].coef_,
+                    audit.inspector.steps[-1][1].coef_,
                     columns=X.drop(["group"], axis=1).columns,
                 )
             )
@@ -155,17 +190,18 @@ for pair in tqdm(pairs):
             print(e)
 
     # Statistical Test Analysis
-    gA = X[X["group"] == 0].drop(["group"], axis=1)
-    gB = X[X["group"] == 1].drop(["group"], axis=1)
-    pA = audit.predict_proba(gA)[:, 0]
-    pB = audit.predict_proba(gB)[:, 0]
+    gA = X_test[Z_test == 0]
+    gB = X_test[Z_test == 1]
+    pA = audit.predict_proba(gA)[:, 1]
+    pB = audit.predict_proba(gB)[:, 1]
     brunnermunzel(pA, pB)
+    auc = roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1])
 
-    low, high = roc_auc_ci(X["group"], audit.predict(X))
+    low, high = roc_auc_ci(Z_test, audit.predict(X_test)[:, 1])
     aucs_test.append(
         [
             pair,
-            roc_auc_score(X["group"], audit.predict(X)),
+            auc,
             low,
             high,
             brunnermunzel(pA, pB).pvalue,
@@ -200,7 +236,7 @@ for i, value in enumerate(pairs):
 plt.legend()
 plt.tight_layout()
 plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
-plt.close()
+
 
 # %%
 # Analysis of coeficients
@@ -244,4 +280,7 @@ auc_test = pd.DataFrame(
 # %%
 auc_test
 
+# %%
+
+roc_auc_ci(Z_test, audit.predict_proba(X_test)[:, 1])
 # %%
