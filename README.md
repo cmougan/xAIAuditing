@@ -12,75 +12,130 @@
 
 To run the code, you need to install the packages listed in `requirements_tutorial.txt`. The code is written in Python 3.10
 ```python
-from fairtools.detector import ExplanationAudit
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import make_blobs
+from explanationspace import ExplanationAudit
+from xgboost import XGBClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from xgboost import XGBRegressor
+import random
+import matplotlib.pyplot as plt
+random.seed(0)
 ```
 
 
 # Tutorial with Synthetic Dataset
 
 ```python
-# Create synthetic data
-N = 5_000
-x1 = np.random.normal(1, 1, size=N)
-x2 = np.random.normal(1, 1, size=N)
-x34 = np.random.multivariate_normal([1, 1], [[1, 0.5], [0.5, 1]], size=N)
-x3 = x34[:, 0]
-x4 = x34[:, 1]
-# Binarize protected attribute - Named var4
-x4 = np.where(x4 > np.mean(x4), 1, 0)
-X = pd.DataFrame([x1, x2, x3, x4]).T
-X.columns = ["var%d" % (i + 1) for i in range(X.shape[1])]
-y = 1 / (1 + np.exp(-(x1 + x2 + x3) / 3))
+X, y = make_blobs(n_samples=2000, centers=2, n_features=5, random_state=0)
+X = pd.DataFrame(X, columns=["a", "b", "c", "d", "e"])
+# Protected att
+X["a"] = np.where(X["a"] > X["a"].mean(), 1, 0)
+
+# Train Val Holdout Split
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=0)
+X_hold, X_te, y_hold, y_te = train_test_split(X_te, y_te, test_size=0.5, random_state=0)
+
+z_tr = X_tr["a"]
+z_te = X_te["a"]
+z_hold = X_hold["a"]
+X_tr = X_tr.drop("a", axis=1)
+X_te = X_te.drop("a", axis=1)
+X_hold = X_hold.drop("a", axis=1)
+# Random
+z_tr_ = np.random.randint(0, 2, size=X_tr.shape[0])
+z_te_ = np.random.randint(0, 2, size=X_te.shape[0])
+z_hold_ = np.random.randint(0, 2, size=X_hold.shape[0])
 ```
 
-```python
-detector = ExplanationAudit(model=XGBRegressor(), gmodel=LogisticRegression())
-detector.fit(X, y, Z="var4")
-detector.get_auc_val()
-```
+Now there is two training options that are equivalent, 
+either passing a trained model and just training the Inspector
+
+Fit ET Inspector where the classifier is a Gradient Boosting Decision Tree and the Detector a logistic regression. Any other classifier or detector can be used.
 
 ```python
-detector.get_auc_val()
-#0.73
-```
-```python
-coefs = detector.gmodel.coef_[0]
-coefs = pd.DataFrame(coefs, index=X.columns[:-1], columns=["coef"]).sort_values("coef", ascending=False)
-coefs.plot(kind="bar")
+# Option 1: fit the auditor when there is a trained model
+model = XGBClassifier().fit(X_tr, y_tr)
+
+auditor = ExplanationAudit(model=model, gmodel=LogisticRegression())
+
+auditor.fit_inspector(X_hold, z_hold)
+print(roc_auc_score(z_te, auditor.predict_proba(X_te)[:, 1]))
+# 0.84
 ```
 
-<p align="center">
-  <img width="616" src="images/coefs_synth.png" />
-</p>
+Or fit the whole pipeline without previous retraining.
+If the AUC is above 0.5 then we can expect and change on the model predictions.
+
+```python
+# Option 2: fit the whole pipeline of model and auditor at once
+auditor.fit_pipeline(X=X_tr, y=y_tr, z=z_tr)
+print(roc_auc_score(z_te, auditor.predict_proba(X_te)[:, 1]))
+# 0.83
+
+# If we fit to random protected att, there is no performance
+# We fit in the previous generated random data
+auditor.fit_pipeline(X=X_tr, y=y_tr, z=z_tr_)
+print(roc_auc_score(z_te_, auditor.predict_proba(X_te)[:, 1]))
+# 0.5
+```
 
 ## Tutorial on Real Dataset
+In this case we use the US Income dataset. 
+The dataset is available in the `Folktables <https://github.com/socialfoundations/folktables>`_ repository.
+
+We generate a geopolitical shift by training on California data and evaluating on other states.
 ```python
-# Load data from the folktables package
+# Real World Example - Folktables
 from folktables import ACSDataSource, ACSIncome
+import pandas as pd
 
-data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
-acs_data = data_source.get_data(states=["CA"], download=True)
-ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(acs_data)
-X, y, _ = ACSIncome.df_to_numpy(acs_data)
-X = pd.DataFrame(X, columns=ACSIncome.features)
-# White vs ALL
-X["RAC1P"] = np.where(X["RAC1P"] == 1, 1, 0)
+data_source = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
+ca_data = data_source.get_data(states=["CA"], download=True)
+ca_features, ca_labels, ca_group = ACSIncome.df_to_pandas(ca_data)
+ca_features = ca_features.drop(columns="RAC1P")
+ca_features["group"] = ca_group
+ca_features["label"] = ca_labels
+# Lets focus on groups 1 and 6
+ca_features = ca_features[ca_features["group"].isin([1, 6])]
+
+# Split train, test and holdout
+X_tr, X_te, y_tr, y_te = train_test_split(
+  ca_features.drop(columns="label"), ca_features.label, test_size=0.5, random_state=0
+)
+X_hold, X_te, y_hold, y_te = train_test_split(X_te, y_te, test_size=0.5, random_state=0)
+# Prot att.
+z_tr = np.where(X_tr["group"].astype(int) == 6, 0, 1)
+z_te = np.where(X_te["group"].astype(int) == 6, 0, 1)
+z_hold = np.where(X_hold["group"].astype(int) == 6, 0, 1)
+X_tr = X_tr.drop("group", axis=1)
+X_te = X_te.drop("group", axis=1)
+X_hold = X_hold.drop("group", axis=1)
+# Fit the model
+model = XGBClassifier().fit(X_tr, y_tr)
 ```
 
+The model is trained on CA data, where we measure un-equal treatment between two ethnic groups 1 and 6
 ```python
-detector = ExplanationAudit(
-        model=XGBRegressor(random_state=0), gmodel=LogisticRegression()
-    )
-detector.fit(X, y, Z="RAC1P")
+auditor = ExplanationAudit(model=model, gmodel=XGBClassifier())
+
+auditor.fit_inspector(X_te, z_te)
+print(roc_auc_score(z_hold, auditor.predict_proba(X_hold)[:, 1]))
 ```
+The AUC is high which means that there is unequal treatment.
+ We can now proceed to inspect the reason behind this un-equal treatment
 
 ```python
-detector.get_auc_val()
-#0.7
+explainer = shap.Explainer(auditor.inspector)
+
+shap_values = explainer(auditor.get_explanations(X_hold))
+# Local Explanations
+shap.waterfall_plot(shap_values[0], show=False)
+
+# Global Explanations
+hap.plots.bar(shap_values, show=False)
 ```
 ```python
 coefs = detector.get_coefs()
@@ -89,5 +144,11 @@ coefs.plot(kind="bar")
 ```
 
 <p align="center">
-  <img width="616" src="images/coefs_real.png" />
+  <img width="616" src="images/folksShapLocal.png" />
+</p>
+
+Above local explanations, below global explanations
+
+<p align="center">
+  <img width="616" src="images/folkstShapGlobal.png" />
 </p>
