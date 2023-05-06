@@ -2,9 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?color=g&style=plastic)](https://opensource.org/licenses/MIT)
 
 # Equal Treatment: Fairness Measures via the Explanation Space
->Even if deployed with the best intentions, machine learning methods can perpetuate, amplify or even create social biases. Measures of
-(un)fairness has been proposed as a way to gauge the (non)discriminatory nature of machine learning models. 
-However, proxies of protected attributes causing discriminatory effects remain challenging to address. In this work, we propose a  new algorithmic approach that measures group-wise demographic parity violations and allows us to inspect the causes of inter-group discrimination. Our method relies on the novel idea of measuring the dependence of a model on the protected attribute based on the explanation space, an informative space that allows for more sensitive audits than the primary space of input data or prediction distributions, and allowing for the assertion of theoretical demographic parity auditing guarantees. We provide  a mathematical analysis, synthetic examples, and experimental evaluation of real-world data. We release an open-source Python package with methods, routines, and tutorials.
+>Libertarian redistribution justice argues that all individuals should be treated equally independently of their protected characteristics. A similar notion in the fair machine learning literature has been equality of outcomes often translated as demographic or statistical parity, which only measures the final outcome, even if there is unequal model treatment. We propose a new method that reflects libertarian philosophical principles more accurately and allows for interpretable measures. We define the explanation space as the space of all feature contributions to the prediction where we measure the equal treatment of individuals. Our approaches come with theoretical properties about the model and protected attribute independence. We study the proposed approach on synthetic and real data.
 
 
 <p align="center">
