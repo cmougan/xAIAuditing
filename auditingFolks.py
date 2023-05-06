@@ -45,6 +45,7 @@ random.seed(0)
 
 # %%
 def roc_auc_ci(y_true, y_score, positive=1):
+    """Computes ROC AUC with confidence interval."""
     AUC = roc_auc_score(y_true, y_score)
     N1 = sum(y_true == positive)
     N2 = sum(y_true != positive)
@@ -60,7 +61,7 @@ def roc_auc_ci(y_true, y_score, positive=1):
         lower = 0
     if upper > 1:
         upper = 1
-    return (lower, upper)
+    return (AUC, lower, upper)
 
 
 # %%
@@ -68,7 +69,7 @@ def roc_auc_ci(y_true, y_score, positive=1):
 state = "CA"
 year = "2014"
 N_b = 2
-boots_size = 0.132
+boots_size = 0.632
 data = GetData()
 try:
     dataset = sys.argv[1]
@@ -120,9 +121,8 @@ for i in tqdm(range(N_b)):
     gB = X_test[Z_test == 1]
     pA = audit.predict_proba(gA)[:, 1]
     pB = audit.predict_proba(gB)[:, 1]
-    auc = roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1])
 
-    low, high = roc_auc_ci(Z_test, audit.predict(X_test)[:, 1])
+    auc, low, high = roc_auc_ci(Z_test, audit.predict_proba(X_test)[:, 1])
     aucs_test.append(
         [
             0,
@@ -194,10 +194,8 @@ for pair in tqdm(pairs):
     gB = X_test[Z_test == 1]
     pA = audit.predict_proba(gA)[:, 1]
     pB = audit.predict_proba(gB)[:, 1]
-    brunnermunzel(pA, pB)
-    auc = roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1])
 
-    low, high = roc_auc_ci(Z_test, audit.predict(X_test)[:, 1])
+    auc, low, high = roc_auc_ci(Z_test, audit.predict_proba(X_test)[:, 1])
     aucs_test.append(
         [
             pair,
@@ -274,13 +272,32 @@ plt.tight_layout()
 plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
 plt.close()
 # %%
-auc_test = pd.DataFrame(
+auc_test_df = pd.DataFrame(
     aucs_test, columns=["pair", "auc", "low", "high", "pvalue", "statistic"]
 )
 # %%
-auc_test
-
+pairs_map = {
+    "Random": "0",
+    "Random": 0,
+    "White-Other": "18",
+    "White-Black": "12",
+    "White-Mixed": "19",
+    "Asian-Other": "68",
+    "Asian-Black": "62",
+    "Asian-Mixed": "69",
+    "Other-Black": "82",
+    "Other-Mixed": "89",
+    "Black-Mixed": "29",
+}
+pairs_map_swap = {value: key for key, value in pairs_map.items()}
+# %%
+# Map pairs_name to pairs
+auc_test_df["pair"] = auc_test_df["pair"].map(pairs_map_swap)
 # %%
 
-roc_auc_ci(Z_test, audit.predict_proba(X_test)[:, 1])
+# %%
+# Save results round decimals to 3
+auc_test_df.drop(0).round(3).to_csv("results/{}_audit.csv".format(dataset), index=False)
+# %%
+auc_test_df
 # %%
