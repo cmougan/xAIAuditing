@@ -85,15 +85,11 @@ from sklearn.gaussian_process import (
 
 # Regressors
 fmodels = [
-    # LogisticRegression(),
+    LogisticRegression(),
     XGBRegressor(),
     LinearSVC(),
-    SVC(),
     DecisionTreeRegressor(),
-    RandomForestRegressor(),
-    MLPRegressor(),
-    KNeighborsRegressor(),
-    GaussianProcessRegressor(),
+    RandomForestRegressor(n_estimators=5, max_depth=5),
 ]
 # Classifiers
 gmodels = [
@@ -126,6 +122,7 @@ for model in fmodels:
                 data_masker=X_train,
             )
             audit.fit_pipeline(X=X_train, y=y_train, z=Z_train)
+
         # Save results
         auc = roc_auc_score(y_test, audit.predict_proba(X_test)[:, 1])
 
@@ -133,4 +130,10 @@ for model in fmodels:
 # %%
 aucs_df = pd.DataFrame(aucs, columns=["auc", "fmodel", "gmodel"])
 aucs_df
+# %%
+# Convert to pivot table
+aucs_df = aucs_df.pivot(index="fmodel", columns="gmodel", values="auc")
+# %%
+# Round to 3 decimals
+aucs_df.round(3).T.to_csv("results/{}_aucs.csv".format(dataset))
 # %%
