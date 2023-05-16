@@ -5,6 +5,7 @@ from fairtools.datasets import GetData
 from tqdm import tqdm
 import sys
 import lightgbm as lgb
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings("ignore")
 
@@ -23,7 +24,6 @@ rcParams.update({"font.size": 22})
 
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 from scipy.stats import wasserstein_distance
 
 # Scikit-Learn
@@ -120,8 +120,8 @@ plt.fill_between(rf_param, (rf_list - ci), (rf_list + ci), alpha=0.1)
 
 plt.xlabel("Max Depth/Hyperparameter")
 plt.ylabel("ET Inspector AUC")
-plt.legend()
-plt.title("Log. Reg. as Equal Treatment Detector")
+plt.legend(fontsize=16)
+plt.title("Log. Reg. as Equal Treatment Inspector", fontsize=16)
 plt.savefig("images/HyperLogReg.pdf", bbox_inches="tight")
 plt.show()
 # %%
@@ -184,8 +184,8 @@ plt.fill_between(rf_param, (rf_list - ci), (rf_list + ci), alpha=0.1)
 
 plt.xlabel("Max Depth/Hyperparameter")
 plt.ylabel("ET Inspector AUC")
-plt.legend()
-plt.title("XGB as Equal Treatment INSPECTOR")
+plt.legend(fontsize=16)
+plt.title("XGB as Equal Treatment Inspector", fontsize=16)
 plt.savefig("images/HyperXGB.pdf", bbox_inches="tight")
 plt.show()
 # %%
