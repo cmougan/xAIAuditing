@@ -23,7 +23,7 @@ rcParams.update({"font.size": 22})
 
 # %%
 N = 5_000
-CASE_A = True
+CASE_A = False
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
@@ -125,26 +125,39 @@ df = pd.DataFrame(
     res,
     columns=[
         "gamma",
-        "Explanation Space",
-        "Output Space",
-        "Input Space",
-        "Input+Output Space",
+        "Explanation Distributions",
+        "Output Distributions",
+        "Input Distributions",
+        "Input+Output Distributions",
     ],
 )
 plt.figure()
 plt.title("{} Case".format("Indirect" if CASE_A else "Uninformative"))
 
 
-# Explanation Space
+# Explanation distribution
 plt.plot(
-    df["gamma"], df["Explanation Space"] * 1.01, label="Explanation Space", marker=">"
+    df["gamma"],
+    df["Explanation Distributions"] * 1.01,
+    label="Explanation Distributions",
+    marker=">",
 )
-# Input Space
-plt.plot(df["gamma"], df["Input Space"] * 0.99, label="Input Space", marker=".")
-# Output Space
-plt.plot(df["gamma"], df["Output Space"], label="Output Space")
-# Input+Output Space
-plt.plot(df["gamma"], df["Input+Output Space"], label="Input+Output Space", marker="*")
+# Input Distributions
+plt.plot(
+    df["gamma"],
+    df["Input Distributions"] * 0.99,
+    label="Input Distributions",
+    marker=".",
+)
+# Output Distributions
+plt.plot(df["gamma"], df["Output Distributions"], label="Output Distributions")
+# Input+Output Distributions
+plt.plot(
+    df["gamma"],
+    df["Input+Output Distributions"],
+    label="Input+Output Distributions",
+    marker="*",
+)
 plt.legend()
 plt.ylabel("AUC")
 plt.xlabel("gamma")
@@ -155,7 +168,9 @@ else:
 plt.show()
 # %%
 plt.figure()
-plt.title("Global feature importance of the auditing model on the explanation space")
+plt.title(
+    "Global feature importance of the auditing model on the explanation distribution"
+)
 sns.barplot(X_te.columns, exp_evolution[exp_evolution.columns[-1]])
 plt.tight_layout()
 plt.savefig("images/explainingFairnessAudit.png")
@@ -167,7 +182,9 @@ m.fit(shapX1, Z_tr)
 explainer = shap.Explainer(m.predict, shapX1)
 shap_values = explainer(shapX1.head(1))
 plt.figure()
-plt.title("Local feature importance of the auditing model on the explanation space")
+plt.title(
+    "Local feature importance of the auditing model on the explanation distribution"
+)
 shap.plots.waterfall(shap_values[0], show=False)
 plt.tight_layout()
 plt.savefig("images/explainingFairnessAuditLocal.png")
