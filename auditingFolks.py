@@ -20,7 +20,7 @@ rcParams["axes.labelsize"] = 14
 rcParams["xtick.labelsize"] = 12
 rcParams["ytick.labelsize"] = 12
 rcParams["figure.figsize"] = 16, 8
-rcParams.update({"font.size": 22})
+rcParams.update({"font.size": 16})
 
 import numpy as np
 import random
@@ -68,7 +68,7 @@ def roc_auc_ci(y_true, y_score, positive=1):
 # Load data
 state = "CA"
 year = "2014"
-N_b = 2
+N_b = 20
 boots_size = 0.632
 data = GetData()
 try:
@@ -141,15 +141,15 @@ ood_auc = {}
 ood_coefs = {}
 pairs = ["18", "12", "19", "68", "62", "69", "82", "89", "29"]
 pairs_named = [
-    "White-Other",
-    "White-Black",
-    "White-Mixed",
-    "Asian-Other",
-    "Asian-Black",
-    "Asian-Mixed",
-    "Other-Black",
-    "Other-Mixed",
-    "Black-Mixed",
+    "White vs Other",
+    "White vs Black",
+    "White vs Mixed",
+    "Asian vs Other",
+    "Asian vs Black",
+    "Asian vs Mixed",
+    "Other vs Black",
+    "Other vs Mixed",
+    "Black vs Mixed",
 ]
 
 for pair in tqdm(pairs):
@@ -225,13 +225,14 @@ colors = [
     "#17becf",
 ]
 plt.figure(figsize=(10, 6))
-plt.title("AUC performance of the Equal Treatment Inspector")
+plt.title("AUC Performance of the Equal Treatment Inspector")
 plt.xlabel("AUC")
+plt.ylabel("Density Distribution", fontsize=16)
 sns.kdeplot(aucs, fill=True, label="Randomly assigned groups")
 for i, value in enumerate(pairs):
     # plt.axvline(np.mean(ood_auc[value]), label=pairs_named[i], color=colors[i])
     sns.kdeplot(ood_auc[value], label=pairs_named[i], color=colors[i], fill=True)
-plt.legend()
+plt.legend(prop={"size": 16})
 plt.tight_layout()
 plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
 
@@ -259,7 +260,7 @@ coefs_res.loc["mean"] = coefs_res.mean(axis=0)
 coefs_res.sort_values(by="mean", ascending=True)
 # %%
 plt.figure(figsize=(10, 6))
-plt.title("Feature importance of Explanation Audits")
+plt.title("Feature importance for Equal Treatment Inspector")
 sns.heatmap(
     coefs_res.sort_values(by="mean", ascending=False, axis=0)
     .sort_values(by="mean", ascending=False, axis=1)
@@ -270,7 +271,7 @@ sns.heatmap(
 )
 plt.tight_layout()
 plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
-plt.close()
+
 # %%
 auc_test_df = pd.DataFrame(
     aucs_test, columns=["pair", "auc", "low", "high", "pvalue", "statistic"]
