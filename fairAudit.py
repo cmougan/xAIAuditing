@@ -23,7 +23,7 @@ rcParams.update({"font.size": 22})
 
 # %%
 N = 5_000
-CASE_A = False
+CASE_A = True
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
@@ -139,32 +139,38 @@ plt.title("{} Case".format("Indirect" if CASE_A else "Uninformative"))
 plt.plot(
     df["gamma"],
     df["Explanation Distributions"] * 1.01,
-    label="Explanation Distributions",
+    label=r"Explanation Distributions $g_\psi$",
     marker=">",
 )
 # Input Distributions
 plt.plot(
     df["gamma"],
     df["Input Distributions"] * 0.99,
-    label="Input Distributions",
+    label=r"Input Distributions $g_\Upsilon$",
     marker=".",
 )
 # Output Distributions
-plt.plot(df["gamma"], df["Output Distributions"], label="Output Distributions")
+plt.plot(
+    df["gamma"],
+    df["Output Distributions"],
+    label=r"Prediction Distributions $g_\upsilon$",
+)
 # Input+Output Distributions
 plt.plot(
     df["gamma"],
     df["Input+Output Distributions"],
-    label="Input+Output Distributions",
+    label=r"Input+Pred Dist. $g_\phi$",
     marker="*",
 )
-plt.legend()
+
 plt.ylabel("AUC")
 plt.xlabel("gamma")
 if CASE_A:
+    plt.legend()
     plt.savefig("images/fairAuditSyntheticCaseA.pdf", bbox_inches="tight")
 else:
     plt.savefig("images/fairAuditSyntheticCaseB.pdf", bbox_inches="tight")
+
 plt.show()
 # %%
 plt.figure()
