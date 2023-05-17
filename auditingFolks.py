@@ -64,6 +64,29 @@ def roc_auc_ci(y_true, y_score, positive=1):
     return (AUC, lower, upper)
 
 
+def c2st(x, y):
+    # Convert to dataframes
+    x = pd.DataFrame(x, columns=["var"])
+    x["label"] = 0
+    y = pd.DataFrame(y, columns=["var"])
+    y["label"] = 1
+
+    # Concatenate
+    df = pd.concat([x, y], axis=0)
+
+    # Train test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        df.drop(["label"], axis=1), df["label"], test_size=0.5, random_state=42
+    )
+
+    # Train classifier
+    clf = LogisticRegression(random_state=0).fit(X_train, y_train)
+
+    # Evaluate AUC
+    auc = roc_auc_score(y_test, clf.predict_proba(X_test)[:, 1])
+    return auc
+
+
 # %%
 # Load data
 state = "CA"
