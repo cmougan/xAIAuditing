@@ -17,9 +17,14 @@ df = df[
     | (df["estimator"] == "XGBoost")
 ]
 
-pd.pivot_table(df, columns=["estimator", "data",], index=["state"],).T.sort_values(
-    by=["estimator", "data"], ascending=True
-).round(
+pd.pivot_table(
+    df,
+    columns=[
+        "estimator",
+        "data",
+    ],
+    index=["state"],
+).T.sort_values(by=["estimator", "data"], ascending=True).round(
     decimals=4
 ).style.highlight_min()  # .to_csv("state_fairness.csv")
 # %%
