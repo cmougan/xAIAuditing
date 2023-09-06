@@ -73,7 +73,7 @@ def train_esd(X, Z, model, detector):
 
 # %%
 N = 5_000
-CASE_A = False
+CASE_A = Truex
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
@@ -225,6 +225,7 @@ plt.plot(
 
 plt.ylabel("AUC")
 plt.xlabel("gamma")
+plt.ylim(0.45, 1)
 if CASE_A:
     plt.legend()
     plt.savefig("images/fairAuditSyntheticCaseALIME.pdf", bbox_inches="tight")
@@ -232,28 +233,4 @@ else:
     plt.savefig("images/fairAuditSyntheticCaseBLIME.pdf", bbox_inches="tight")
 
 plt.show()
-# %%
-plt.figure()
-plt.title(
-    "Global feature importance of the auditing model on the explanation distribution"
-)
-sns.barplot(X_te.columns, exp_evolution[exp_evolution.columns[-1]])
-plt.tight_layout()
-plt.savefig("images/explainingFairnessAudit.png")
-plt.show()
-# %%
-## Fit again the fairness auditor with the last gamma for viz purposes
-m = LogisticRegression()
-m.fit(shapX1, Z_tr)
-explainer = shap.Explainer(m.predict, shapX1)
-shap_values = explainer(shapX1.head(1))
-plt.figure()
-plt.title(
-    "Local feature importance of the auditing model on the explanation distribution"
-)
-shap.plots.waterfall(shap_values[0], show=False)
-plt.tight_layout()
-plt.savefig("images/explainingFairnessAuditLocal.png")
-plt.show()
-# %%
 # %%
