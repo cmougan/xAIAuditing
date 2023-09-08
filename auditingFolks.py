@@ -4,7 +4,8 @@ from explanationspace import ExplanationAudit
 from fairtools.datasets import GetData
 from tqdm import tqdm
 import sys
-from scipy.stats import brunnermunzel
+from scipy.stats import brunnermunzel, wasserstein_distance, ks_2samp
+import pdb
 
 warnings.filterwarnings("ignore")
 
@@ -35,7 +36,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score
 
 # Specific packages
-from xgboost import XGBRegressor
+from xgboost import XGBRegressor, XGBClassifier
 
 # Seeding
 np.random.seed(0)
@@ -63,15 +64,15 @@ def roc_auc_ci(y_true, y_score, positive=1):
     return (AUC, lower, upper)
 
 
-def c2st(x, y):
+def c2st(g1, g2):
     # Convert to dataframes
-    x = pd.DataFrame(x, columns=["var"])
-    x["label"] = 0
-    y = pd.DataFrame(y, columns=["var"])
-    y["label"] = 1
+    g1 = pd.DataFrame(g1, columns=["var"])
+    g1["label"] = 0
+    g2 = pd.DataFrame(g2, columns=["var"])
+    g2["label"] = 1
 
     # Concatenate
-    df = pd.concat([x, y], axis=0)
+    df = pd.concat([g1, g2], axis=0)
 
     # Train test split
     X_train, X_test, y_train, y_test = train_test_split(
@@ -93,6 +94,10 @@ year = "2014"
 N_b = 20
 boots_size = 0.632
 data = GetData()
+
+dp_c2st = []
+dp_wass = []
+dp_ks = []
 try:
     dataset = sys.argv[1]
     X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
@@ -173,6 +178,20 @@ pairs_named = [
     "Other vs Mixed",
     "Black vs Mixed",
 ]
+pairs_map = {
+    "Random": "0",
+    "Random": 0,
+    "White-Other": "18",
+    "White-Black": "12",
+    "White-Mixed": "19",
+    "Asian-Other": "68",
+    "Asian-Black": "62",
+    "Asian-Mixed": "69",
+    "Other-Black": "82",
+    "Other-Mixed": "89",
+    "Black-Mixed": "29",
+}
+pairs_map_swap = {value: key for key, value in pairs_map.items()}
 
 for pair in tqdm(pairs):
     X_, y_ = data.get_state(
@@ -189,6 +208,7 @@ for pair in tqdm(pairs):
     for i in range(N_b):
         # Train test split X,Y,Z
         X_train = X_.sample(frac=boots_size, replace=True)
+
         y_train = X_train["label"]
         Z_train = X_train["group"]
         X_train = X_train.drop(["label", "group"], axis=1)
@@ -197,19 +217,28 @@ for pair in tqdm(pairs):
         Z_test = X_test["group"]
         X_test = X_test.drop(["label", "group"], axis=1)
 
-        try:
-            audit.fit_pipeline(X=X_train, y=y_train, z=Z_train)
-            ood_temp.append(roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1]))
-            ood_coefs_temp = ood_coefs_temp.append(
-                pd.DataFrame(
-                    audit.inspector.steps[-1][1].coef_,
-                    columns=X.drop(["group"], axis=1).columns,
-                )
+        audit.fit_pipeline(X=X_train, y=y_train, z=Z_train)
+        ood_temp.append(roc_auc_score(Z_test, audit.predict_proba(X_test)[:, 1]))
+        ood_coefs_temp = ood_coefs_temp.append(
+            pd.DataFrame(
+                audit.inspector.steps[-1][1].coef_,
+                columns=X.drop(["group"], axis=1).columns,
             )
+        )
+        # Build predictions
+        gA = X_test[Z_test == 0]
+        gB = X_test[Z_test == 1]
+        pA = audit.model.predict(gA)
+        pB = audit.model.predict(gB)
 
-        except Exception as e:
-            print("Error with pair", pair)
-            print(e)
+        # DP on C2ST
+        dp_c2st.append([pair, c2st(pA, pB)])
+
+        # DP Wasserstein
+        dp_wass.append([pair, wasserstein_distance(pA, pB)])
+
+        # DP KS
+        dp_ks.append([pair, ks_2samp(pA, pB).pvalue, ks_2samp(pA, pB).statistic])
 
     # Statistical Test Analysis
     gA = X_test[Z_test == 0]
@@ -232,6 +261,8 @@ for pair in tqdm(pairs):
     ood_auc[pair] = ood_temp
     ood_coefs[pair] = ood_coefs_temp
 
+# Clean data
+dp_c2st = pd.DataFrame(dp_c2st, columns=["pair", "auc"])
 
 # %%
 # Plot AUC
@@ -251,12 +282,118 @@ plt.title("AUC Performance of the Equal Treatment Inspector")
 plt.xlabel("AUC")
 plt.ylabel("Density Distribution", fontsize=16)
 sns.kdeplot(aucs, fill=True, label="Randomly assigned groups")
+ymax = 0
 for i, value in enumerate(pairs):
-    # plt.axvline(np.mean(ood_auc[value]), label=pairs_named[i], color=colors[i])
-    sns.kdeplot(ood_auc[value], label=pairs_named[i], color=colors[i], fill=True)
+    print(dp_c2st[dp_c2st["pair"] == value].auc.mean())
+    plt.axvline(
+        dp_c2st[dp_c2st["pair"] == value].auc.mean(),
+        label="DP " + pairs_named[i],
+        color=colors[i],
+    )
+    sns.kdeplot(
+        ood_auc[value], label="ET " + pairs_named[i], color=colors[i], fill=True
+    )
+
 plt.legend(prop={"size": 16})
+plt.ylim(0, 200)
 plt.tight_layout()
 plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
+# %%
+# Grouped AUC bar plot
+aux_et = []
+aux_dp = []
+aux = pd.DataFrame(columns=["pair", "et", "et_err"])
+for value in ood_auc:
+    # print(np.mean(ood_auc[value]))
+    aux1 = pd.DataFrame(
+        [[value, np.mean(ood_auc[value]), np.std(ood_auc[value])]],
+        columns=["pair", "et", "et_err"],
+    )
+    aux = aux.append(aux1)
+# Iterrows in aux
+aux["dp"] = np.nan
+aux["dp_err"] = np.nan
+
+aux_dp = []
+aux_dp_err = []
+for i, row in aux.iterrows():
+    aux_dp.append(dp_c2st[dp_c2st["pair"] == row["pair"]].auc.mean())
+    aux_dp_err.append(dp_c2st[dp_c2st["pair"] == row["pair"]].auc.std())
+aux["dp"] = aux_dp
+aux["dp_err"] = aux_dp_err
+
+aux["pair"] = aux["pair"].map(pairs_map_swap)
+
+# Pivot table
+aux = aux.pivot_table(index="pair", aggfunc="mean")
+aux = aux.reset_index()
+aux = aux.sort_values(by="et", ascending=False)
+
+# Stacked bar plot
+fig, ax = plt.subplots(figsize=(10, 6))
+
+bar_width = 0.35
+index = np.arange(len(aux))
+
+bar1 = ax.bar(
+    index - bar_width / 2,
+    aux["dp"],
+    bar_width,
+    label="Demographic Parity",
+    color="#1f77b4",
+    alpha=0.8,
+    yerr=aux["dp_err"],
+)
+bar2 = ax.bar(
+    index + bar_width / 2,
+    aux["et"],
+    bar_width,
+    label="Equal Treatment",
+    color="#ff7f0e",
+    alpha=0.8,
+    yerr=aux["et_err"],
+)
+
+ax.set_xlabel("")
+ax.set_ylabel("AUC")
+ax.set_title("Demographic Parity vs Equal Treatment measured by C2ST")
+ax.set_xticks(index)
+ax.set_xticklabels(aux["pair"], rotation=45)
+ax.set_ylim(0.45, 1)
+ax.legend()
+plt.tight_layout()
+plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
+plt.show()
+plt.close()
+
+# %%
+plt.figure(figsize=(10, 6))
+plt.title("AUC Performance of the Equal Treatment Inspector")
+# plt.xlabel("AUC")
+# plt.ylabel("Density Distribution", fontsize=16)
+# sns.kdeplot(aucs, fill=True, label="Randomly assigned groups")
+ymax = 0
+for i, value in enumerate(pairs):
+    plt.scatter(
+        y=dp_c2st[dp_c2st["pair"] == value].auc.mean(),
+        x=pairs_named[i],
+        label="DP " + pairs_named[i],
+        color=colors[i],
+    )
+    plt.scatter(
+        y=np.mean(ood_auc[value]),
+        x=pairs_named[i],
+        label="DP " + pairs_named[i],
+        color=colors[i],
+        marker="*",
+    )
+    # sns.kdeplot(ood_auc[value], label="ET " + pairs_named[i], color=colors[i], fill=True)
+
+plt.legend(prop={"size": 16})
+plt.tight_layout()
+# plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
+# plt.show()
+plt.close()
 
 
 # %%
@@ -298,21 +435,7 @@ plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tig
 auc_test_df = pd.DataFrame(
     aucs_test, columns=["pair", "auc", "low", "high", "pvalue", "statistic"]
 )
-# %%
-pairs_map = {
-    "Random": "0",
-    "Random": 0,
-    "White-Other": "18",
-    "White-Black": "12",
-    "White-Mixed": "19",
-    "Asian-Other": "68",
-    "Asian-Black": "62",
-    "Asian-Mixed": "69",
-    "Other-Black": "82",
-    "Other-Mixed": "89",
-    "Black-Mixed": "29",
-}
-pairs_map_swap = {value: key for key, value in pairs_map.items()}
+
 # %%
 # Map pairs_name to pairs
 auc_test_df["pair"] = auc_test_df["pair"].map(pairs_map_swap)
@@ -322,5 +445,17 @@ auc_test_df["pair"] = auc_test_df["pair"].map(pairs_map_swap)
 # Save results round decimals to 3
 auc_test_df.drop(0).round(3).to_csv("results/{}_audit.csv".format(dataset), index=False)
 # %%
-auc_test_df
+gA = X_test[Z_test == 0]
+gB = X_test[Z_test == 1]
+pA = audit.model.predict(gA)
+pB = audit.model.predict(gB)
+
+plt.figure()
+sns.kdeplot(pA, label="g1")
+sns.kdeplot(pB, label="g2")
+plt.legend()
+# %%
+np.mean(np.where(pA > 0.5, 1, 0)) - np.mean(np.where(pB > 0.5, 1, 0))
+# %%
+np.mean(pA) - np.mean(pB)
 # %%
