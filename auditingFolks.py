@@ -263,6 +263,9 @@ for pair in tqdm(pairs):
 
 # Clean data
 dp_c2st = pd.DataFrame(dp_c2st, columns=["pair", "auc"])
+dp_wass = pd.DataFrame(dp_wass, columns=["pair", "auc"])
+dp_ks = pd.DataFrame(dp_ks, columns=["pair", "pvalue", "auc"])
+
 
 # %%
 # Plot AUC
@@ -284,7 +287,6 @@ plt.ylabel("Density Distribution", fontsize=16)
 sns.kdeplot(aucs, fill=True, label="Randomly assigned groups")
 ymax = 0
 for i, value in enumerate(pairs):
-    print(dp_c2st[dp_c2st["pair"] == value].auc.mean())
     plt.axvline(
         dp_c2st[dp_c2st["pair"] == value].auc.mean(),
         label="DP " + pairs_named[i],
@@ -455,7 +457,23 @@ sns.kdeplot(pA, label="g1")
 sns.kdeplot(pB, label="g2")
 plt.legend()
 # %%
-np.mean(np.where(pA > 0.5, 1, 0)) - np.mean(np.where(pB > 0.5, 1, 0))
+dp_c2st["stat"] = "c2st"
+dp_ks["stat"] = "ks"
+dp_wass["stat"] = "wass"
+# Append all
+dp_all = dp_c2st.append(dp_ks).append(dp_wass)
 # %%
-np.mean(pA) - np.mean(pB)
+dp_all
+# %%
+# Table
+# Groupby mean
+dp_all = dp_all.groupby(["pair", "stat"]).agg({"auc": ["mean", "std"]})
+# Pivot table
+dp_all = dp_all.pivot_table(index="pair", columns="stat", aggfunc="mean")
+# Map
+dp_all.index = dp_all.index.map(pairs_map_swap)
+# Join Round and Save
+aux[["pair", "et", "et_err"]].set_index("pair").join(dp_all).round(3).to_csv(
+    "results/{}_dp.csv".format(dataset)
+)
 # %%
