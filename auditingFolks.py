@@ -394,7 +394,6 @@ for i, value in enumerate(pairs):
 plt.legend(prop={"size": 16})
 plt.tight_layout()
 # plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
-# plt.show()
 plt.close()
 
 
