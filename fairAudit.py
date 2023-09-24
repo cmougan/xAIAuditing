@@ -23,7 +23,7 @@ rcParams.update({"font.size": 22})
 
 # %%
 N = 5_000
-CASE_A = True
+CASE_A = False
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
@@ -139,32 +139,32 @@ plt.title("{} Case".format("Indirect" if CASE_A else "Uninformative"))
 plt.plot(
     df["gamma"],
     df["Explanation Distributions"] * 1.01,
-    label=r"Explanation Distributions $g_\psi$",
+    label=r"Equal Treatment $g_\psi$",
     marker=">",
 )
 # Input Distributions
 plt.plot(
     df["gamma"],
     df["Input Distributions"] * 0.99,
-    label=r"Input Distributions $g_\Upsilon$",
+    label=r"Input Data Fairness $g_\Upsilon$",
     marker=".",
 )
 # Output Distributions
 plt.plot(
     df["gamma"],
     df["Output Distributions"],
-    label=r"Prediction Distributions $g_\upsilon$",
+    label=r"Demographic Parity $g_\upsilon$",
 )
 # Input+Output Distributions
 plt.plot(
     df["gamma"],
     df["Input+Output Distributions"],
-    label=r"Input+Pred Dist. $g_\phi$",
+    label=r"Input Data + DP $g_\phi$",
     marker="*",
 )
 
-plt.ylabel("AUC")
-plt.xlabel("gamma")
+plt.ylabel("AUC", fontsize=16)
+plt.xlabel("gamma", fontsize=16)
 if CASE_A:
     plt.legend()
     plt.savefig("images/fairAuditSyntheticCaseA.pdf", bbox_inches="tight")
