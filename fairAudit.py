@@ -23,7 +23,7 @@ rcParams.update({"font.size": 22})
 
 # %%
 N = 5_000
-CASE_A = False
+CASE_A = True
 dp = []
 res = []
 exp_evolution = pd.DataFrame()
@@ -146,7 +146,7 @@ plt.plot(
 plt.plot(
     df["gamma"],
     df["Input Distributions"] * 0.99,
-    label=r"Input Data Fairness $g_\Upsilon$",
+    label=r"Fairness Input $g_\Upsilon$",
     marker=".",
 )
 # Output Distributions
@@ -159,12 +159,12 @@ plt.plot(
 plt.plot(
     df["gamma"],
     df["Input+Output Distributions"],
-    label=r"Input Data + DP $g_\phi$",
+    label=r"Fairnes Input + DP $g_\phi$",
     marker="*",
 )
 
-plt.ylabel("AUC", fontsize=16)
-plt.xlabel("gamma", fontsize=16)
+plt.ylabel("AUC", fontsize=22)
+plt.xlabel(r"gamma $\gamma$", fontsize=22)
 if CASE_A:
     plt.legend()
     plt.savefig("images/fairAuditSyntheticCaseA.pdf", bbox_inches="tight")

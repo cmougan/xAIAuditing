@@ -341,7 +341,7 @@ bar1 = ax.bar(
     index - bar_width / 2,
     aux["dp"],
     bar_width,
-    label="Demographic Parity",
+    label=r"Demographic Parity $g_v$",
     color="#1f77b4",
     alpha=0.8,
     yerr=aux["dp_err"],
@@ -350,7 +350,7 @@ bar2 = ax.bar(
     index + bar_width / 2,
     aux["et"],
     bar_width,
-    label="Equal Treatment",
+    label=r"Equal Treatment $g_\psi$",
     color="#ff7f0e",
     alpha=0.8,
     yerr=aux["et_err"],
@@ -360,12 +360,11 @@ ax.set_xlabel("")
 ax.set_ylabel("AUC")
 ax.set_title("Demographic Parity vs Equal Treatment measured by C2ST")
 ax.set_xticks(index)
-ax.set_xticklabels(aux["pair"], rotation=45)
+ax.set_xticklabels(aux["pair"], rotation=45, fontsize=22)
 ax.set_ylim(0.45, 1)
 ax.legend()
 plt.tight_layout()
 plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
-plt.show()
 plt.close()
 
 # %%

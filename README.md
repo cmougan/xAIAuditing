@@ -1,7 +1,7 @@
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg?style=plastic)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?color=g&style=plastic)](https://opensource.org/licenses/MIT)
 
-# Equal Treatment: Fairness Measures via the Explanation Space
+# Beyond Demographic Parity: Measuring Equal Treatment
 >Libertarian redistribution justice argues that all individuals should be treated equally independently of their protected characteristics. A similar notion in the fair machine learning literature has been equality of outcomes often translated as demographic or statistical parity, which only measures the final outcome, even if there is unequal model treatment. We propose a new method that reflects libertarian philosophical principles more accurately and allows for interpretable measures. We define the explanation space as the space of all feature contributions to the prediction where we measure the equal treatment of individuals. Our approaches come with theoretical properties about the model and protected attribute independence. We study the proposed approach on synthetic and real data.
 
 
