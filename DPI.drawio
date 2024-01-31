@@ -1,0 +1,66 @@
+<mxfile host="app.diagrams.net" modified="2023-05-17T09:55:41.336Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36" etag="yaQR5rmQ16n37YjqTetu" version="21.3.2" type="device">
+  <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
+    <mxGraphModel dx="1434" dy="739" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="691" pageHeight="200" math="1" shadow="0">
+      <root>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="WIyWlLk6GJQsqaUBKTNV-7" target="CERsI-dbUr9vtdzJt2CL-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-7" value="Train Model&lt;br&gt;$$f_\theta:X\rightarrow Y$$" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;horizontal=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="111" y="14" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="CERsI-dbUr9vtdzJt2CL-0" target="WIyWlLk6GJQsqaUBKTNV-7" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-0" value="Input Data&lt;br&gt;$$\mathcal{D}$$" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="6" y="9" width="79" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="CERsI-dbUr9vtdzJt2CL-2" target="CERsI-dbUr9vtdzJt2CL-10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-2" value="Explanations&amp;nbsp;&lt;br&gt;$$\mathcal{S}(f_\theta,\mathcal{D}_X^{val}&lt;br&gt;)$$" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="233" y="19" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iagj9uHohKKXajr5xMw7-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="CERsI-dbUr9vtdzJt2CL-10" target="CERsI-dbUr9vtdzJt2CL-13" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="478" y="90" />
+              <mxPoint x="472" y="90" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-10" value="Train Classifier for &lt;br&gt;Two-Sample Test&lt;br&gt;$$g_\psi:\mathbb{R}^p \rightarrow Z&lt;br&gt;$$" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;horizontal=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="384" y="9" width="187" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="CERsI-dbUr9vtdzJt2CL-13" target="CERsI-dbUr9vtdzJt2CL-15" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="CERsI-dbUr9vtdzJt2CL-13" target="CERsI-dbUr9vtdzJt2CL-18" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-13" value="$$H_0:$$ $$ \texttt{AUC} = 0.5$$" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="428" y="104" width="87" height="91" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-15" value="Equal treatment&lt;br&gt;$$\mathcal{S}(f_\theta,X) \perp Z&lt;br&gt;&amp;nbsp;$$" style="rounded=1;whiteSpace=wrap;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="555" y="119" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="CERsI-dbUr9vtdzJt2CL-18" target="CERsI-dbUr9vtdzJt2CL-20" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-18" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;Un-Equal Treatment&lt;/span&gt;&lt;br style=&quot;border-color: var(--border-color); color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;$$\mathcal{S}(f_\theta,X&lt;br&gt;) \not\perp Z&lt;br&gt;$$&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="251" y="119" width="132" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-20" value="Explain&lt;br&gt;Equal Treatment Inspector&lt;br&gt;$$\mathcal{S}(g_\psi,&lt;br&gt;\mathcal{S}(f_\theta,\mathcal{D}_X^{test}&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;))$$" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="43" y="114" width="177" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-23" value="&lt;font color=&quot;#00cc00&quot;&gt;Not Reject&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="495" y="114" width="60" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="CERsI-dbUr9vtdzJt2CL-24" value="&lt;font color=&quot;#ff0000&quot;&gt;Reject&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="383" y="114" width="60" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
