@@ -62,7 +62,7 @@ class GetData:
     X, y, X_ood, y_ood = data.get_data()
     """
 
-    def __init__(self, type: str = "blobs", N: int = 100000):
+    def __init__(self, type: str = "blobs", N: int = 20_000):
         self.type = type
         self.N = N
         self.X = None
@@ -129,7 +129,7 @@ class GetData:
         self.y = ca_features["label"]
 
         # Shorten data
-        # self.X = X.head(self.N)
-        # self.y = y[: self.N]
+        self.X = self.X.head(self.N)
+        self.y = self.y[: self.N]
 
         return self.X, self.y

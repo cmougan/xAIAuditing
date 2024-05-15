@@ -139,7 +139,7 @@ plt.title("{} Case".format("Indirect" if CASE_A else "Uninformative"))
 plt.plot(
     df["gamma"],
     df["Explanation Distributions"] * 1.01,
-    label=r"Equal Treatment $g_\psi$",
+    label=r"Explantions Disparity $g_\psi$",
     marker=">",
 )
 # Input Distributions

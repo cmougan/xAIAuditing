@@ -105,7 +105,7 @@ except Exception as e:
     # Print error
     print("Error:", e)
     print("No dataset specified, using ACSIncome")
-    dataset = "ACSIncome"
+    dataset = "ACSTravelTime"
     X, y = data.get_state(year=year, state=state, verbose=True, datasets=dataset)
 print("Dataset:", dataset)
 X_ = X.drop(["group"], axis=1)
@@ -266,6 +266,9 @@ dp_c2st = pd.DataFrame(dp_c2st, columns=["pair", "auc"])
 dp_wass = pd.DataFrame(dp_wass, columns=["pair", "auc"])
 dp_ks = pd.DataFrame(dp_ks, columns=["pair", "pvalue", "auc"])
 
+auc_test_df = pd.DataFrame(
+    aucs_test, columns=["pair", "auc", "low", "high", "pvalue", "statistic"]
+)
 
 # %%
 # Plot AUC
@@ -312,10 +315,10 @@ for value in ood_auc:
         columns=["pair", "et", "et_err"],
     )
     aux = aux.append(aux1)
+
 # Iterrows in aux
 aux["dp"] = np.nan
 aux["dp_err"] = np.nan
-
 aux_dp = []
 aux_dp_err = []
 for i, row in aux.iterrows():
@@ -325,12 +328,27 @@ aux["dp"] = aux_dp
 aux["dp_err"] = aux_dp_err
 
 aux["pair"] = aux["pair"].map(pairs_map_swap)
-
+# %%
 # Pivot table
-aux = aux.pivot_table(index="pair", aggfunc="mean")
-aux = aux.reset_index()
+# aux = aux.pivot_table(index="pair", aggfunc="mean")
+# aux = aux.reset_index()
 aux = aux.sort_values(by="et", ascending=False)
-
+# Append to aux a row with Random-Random and values 0.5
+aux = aux.append(
+    pd.DataFrame(
+        [
+            [
+                "Random",
+                auc_test_df["auc"][0],
+                auc_test_df["high"][0] - auc_test_df["low"][0],
+                auc_test_df["auc"][0],
+                auc_test_df["high"][0] - auc_test_df["low"][0],
+            ]
+        ],
+        columns=aux.columns,
+    )
+)
+# %%
 # Stacked bar plot
 fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -350,7 +368,7 @@ bar2 = ax.bar(
     index + bar_width / 2,
     aux["et"],
     bar_width,
-    label=r"Equal Treatment $g_\psi$",
+    label=r"Explanations Disparity $g_\psi$",
     color="#ff7f0e",
     alpha=0.8,
     yerr=aux["et_err"],
@@ -358,19 +376,22 @@ bar2 = ax.bar(
 
 ax.set_xlabel("")
 ax.set_ylabel("AUC")
-ax.set_title("Demographic Parity vs Equal Treatment measured by C2ST")
+ax.set_title(
+    "Demographic Parity vs Explanations Disparity measured by C2ST", fontsize=22
+)
 ax.set_xticks(index)
 ax.set_xticklabels(aux["pair"], rotation=45, fontsize=22)
 ax.set_ylim(0.45, 1)
-ax.legend()
+ax.legend(prop={"size": 16})
 plt.tight_layout()
 plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
-plt.close()
+# plt.close()
 
 # %%
 plt.figure(figsize=(10, 6))
 plt.title("AUC Performance of the Equal Treatment Inspector")
 # plt.xlabel("AUC")
+
 # plt.ylabel("Density Distribution", fontsize=16)
 # sns.kdeplot(aucs, fill=True, label="Randomly assigned groups")
 ymax = 0
@@ -390,11 +411,11 @@ for i, value in enumerate(pairs):
     )
     # sns.kdeplot(ood_auc[value], label="ET " + pairs_named[i], color=colors[i], fill=True)
 
-plt.legend(prop={"size": 16})
+plt.legend(prop={"size": 22})
 plt.tight_layout()
 # plt.savefig("images/detector_auc_{}.pdf".format(dataset), bbox_inches="tight")
 #
-plt.close()
+# plt.close()
 
 
 # %%
@@ -433,9 +454,6 @@ plt.tight_layout()
 plt.savefig("images/feature_importance_{}.pdf".format(dataset), bbox_inches="tight")
 
 # %%
-auc_test_df = pd.DataFrame(
-    aucs_test, columns=["pair", "auc", "low", "high", "pvalue", "statistic"]
-)
 
 # %%
 # Map pairs_name to pairs
