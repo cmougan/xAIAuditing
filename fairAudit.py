@@ -163,8 +163,8 @@ plt.plot(
     marker="*",
 )
 
-plt.ylabel("AUC", fontsize=22)
-plt.xlabel(r"gamma $\gamma$", fontsize=22)
+plt.ylabel("AUC", fontsize=16)
+plt.xlabel(r"gamma $\gamma$", fontsize=16)
 if CASE_A:
     plt.legend()
     plt.savefig("images/fairAuditSyntheticCaseA.pdf", bbox_inches="tight")

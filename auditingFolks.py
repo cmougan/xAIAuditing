@@ -377,10 +377,10 @@ bar2 = ax.bar(
 ax.set_xlabel("")
 ax.set_ylabel("AUC")
 ax.set_title(
-    "Demographic Parity vs Explanations Disparity measured by C2ST", fontsize=22
+    "Demographic Parity vs Explanations Disparity measured by C2ST", fontsize=16
 )
 ax.set_xticks(index)
-ax.set_xticklabels(aux["pair"], rotation=45, fontsize=22)
+ax.set_xticklabels(aux["pair"], rotation=45, fontsize=16)
 ax.set_ylim(0.45, 1)
 ax.legend(prop={"size": 16})
 plt.tight_layout()
@@ -441,7 +441,7 @@ coefs_res.loc["mean"] = coefs_res.mean(axis=0)
 coefs_res.sort_values(by="mean", ascending=True)
 # %%
 plt.figure(figsize=(10, 6))
-plt.title("Feature importance for Equal Treatment Inspector")
+plt.title("Feature importance for Equal Treatment Inspector", fontsize=22)
 sns.heatmap(
     coefs_res.sort_values(by="mean", ascending=False, axis=0)
     .sort_values(by="mean", ascending=False, axis=1)
