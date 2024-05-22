@@ -15,9 +15,9 @@ from scipy.stats import wasserstein_distance
 plt.style.use("seaborn-whitegrid")
 from matplotlib import rcParams
 
-rcParams["axes.labelsize"] = 14
-rcParams["xtick.labelsize"] = 12
-rcParams["ytick.labelsize"] = 12
+rcParams["axes.labelsize"] = 22
+rcParams["xtick.labelsize"] = 26
+rcParams["ytick.labelsize"] = 26
 rcParams["figure.figsize"] = 16, 8
 rcParams.update({"font.size": 22})
 
@@ -131,8 +131,8 @@ df = pd.DataFrame(
         "Input+Output Distributions",
     ],
 )
-plt.figure()
-plt.title("{} Case".format("Indirect" if CASE_A else "Uninformative"))
+plt.figure(figsize=(16, 8))
+plt.title("{} Case".format("Indirect" if CASE_A else "Uninformative"), fontsize=26)
 
 
 # Explanation distribution
@@ -163,37 +163,16 @@ plt.plot(
     marker="*",
 )
 
-plt.ylabel("AUC", fontsize=16)
-plt.xlabel(r"gamma $\gamma$", fontsize=16)
+plt.ylabel("AUC", fontsize=26)
+plt.xlabel(r"gamma $\gamma$", fontsize=26)
 if CASE_A:
-    plt.legend()
+    plt.legend(fontsize=26)
     plt.savefig("images/fairAuditSyntheticCaseA.pdf", bbox_inches="tight")
 else:
     plt.savefig("images/fairAuditSyntheticCaseB.pdf", bbox_inches="tight")
 
 plt.show()
+
 # %%
-plt.figure()
-plt.title(
-    "Global feature importance of the auditing model on the explanation distribution"
-)
-sns.barplot(X_te.columns, exp_evolution[exp_evolution.columns[-1]])
-plt.tight_layout()
-plt.savefig("images/explainingFairnessAudit.png")
-plt.show()
-# %%
-## Fit again the fairness auditor with the last gamma for viz purposes
-m = LogisticRegression()
-m.fit(shapX1, Z_tr)
-explainer = shap.Explainer(m.predict, shapX1)
-shap_values = explainer(shapX1.head(1))
-plt.figure()
-plt.title(
-    "Local feature importance of the auditing model on the explanation distribution"
-)
-shap.plots.waterfall(shap_values[0], show=False)
-plt.tight_layout()
-plt.savefig("images/explainingFairnessAuditLocal.png")
-plt.show()
-# %%
+CASE_A
 # %%
